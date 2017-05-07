@@ -108,32 +108,30 @@ char **buffer_reader(char* buffer) {
         i++;
         array = (char**)realloc(array, i * sizeof(char*));
         array[i-1] = ptr;
-        ptr = strtok (NULL, " \r\n");
+        ptr = strtok(NULL, " \r\n");
     }
     return array;
 }
 
 int input_handler(int client_fd, char** input) {
     char *output = NULL;
-    int len = 0;
+    int len = 40;
     char *command = input[0];
     if (!strcmp(command, "PING")) {
         output = "PONG";
-        len = 4;
     } else if (!strcmp(command, "PONG")) {
-        output = "ERRO: PONG messages are strictly reserved for server responses";
-        len = 62;
+        output = "ERRO";
     } else if (!strcmp(command, "OKAY")) {
-        output = "ERRO: is not okay to send OKAY messages to the server";
-        len = 53;
+        output = "ERRO";
     } else if (!strcmp(command, "SOLN")) {
-        BYTE difficulty[32], seed[64], solution[64];
+        uint32_t difficulty = strtoull(input[1], NULL, 16);
+        BYTE seed[64];
+        uint64_t solution= strtoull(input[3], NULL, 16);
+
     } else if (!strcmp(command, "WORK")) {
-        output = "ERRO: incomplete implementation";
-        len = 31;
+        output = "ERRO";
     } else {
-        output = "ERRO: this message should not be sent to the server";
-        len = 51;
+        output = "ERRO";
     }
     return write(client_fd, output, len);
 }

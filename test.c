@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <inttypes.h>
 
-#include "unit256.h"
+#include "uint256.h"
 #include "sha256.h"
 
 BYTE *byte_converter(char*);
@@ -26,17 +27,13 @@ int main(int argc, char const *argv[]) {
     for (i = 0; i < n; ++i)
         printf("%s\n", array[i]);
 
-    BYTE a[32];
-    a = byte_converter(array[1]);
+    uint64_t a;
+    a = strtoull(array[3], NULL, 16);
+        printf("%llx\n", a);
 
     return 0;
 }
 
 BYTE *byte_converter(char *str) {
-    BYTE[32] uint256;
-    uint256_init(unit256);
-    char *ptr = str;
-    while (*ptr != '\0') {
-        ptr++;
-    }
+
 }

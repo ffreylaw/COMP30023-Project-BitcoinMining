@@ -10,8 +10,9 @@
 #include <netinet/in.h>
 #include <pthread.h>
 #include <stdbool.h>
+#include <stdint.h>
 
-#include "unit256.h"
+#include "uint256.h"
 #include "sha256.h"
 
 typedef struct {
@@ -22,6 +23,6 @@ void *work_function(void*);
 char **buffer_reader(char*);
 int input_handler(int, char**);
 BYTE *byte_converter(char*);
-void proof_of_work(BYTE*, BYTE*, BYTE*);
+void proof_of_work(uint32_t, BYTE*, uint64_t);
 
 #endif
