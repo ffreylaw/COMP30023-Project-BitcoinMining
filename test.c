@@ -90,26 +90,19 @@ int main(int argc, char const *argv[]) {
 
 
 	SHA256_CTX ctx;
-    bool flag = false;
-    while (!flag) {
-        BYTE soln[32];
-        uint256_init(soln);
+    BYTE soln[SHA256_BLOCK_SIZE];
+    uint256_init(soln);
+    while (true) {
         char *text = (char*)malloc(sizeof(char));
         int count = 0;
-        //bool flag = false;
         char *buf1;
         buf1 = (char*)malloc(2 * sizeof(char));
         for (i = 0; i < 32; i++) {
-            // if (!flag && (seed[i] != 0x0)) {
-            //     flag = true;
-            // }
-            //if (flag) {
-                count+=2;
-                text = (char*)realloc(text, count * sizeof(char));
-                sprintf(buf1, "%02x", seed[i]);
-                text[count-2] = buf1[0];
-                text[count-1] = buf1[1];
-            //}
+            count+=2;
+            text = (char*)realloc(text, count * sizeof(char));
+            sprintf(buf1, "%02x", seed[i]);
+            text[count-2] = buf1[0];
+            text[count-1] = buf1[1];
         }
         buf1 = (char*)malloc((32 + 1) * sizeof(char));
         sprintf(buf1, "%llx", solution);
@@ -120,21 +113,20 @@ int main(int argc, char const *argv[]) {
         }
         printf("text: %s\n", text);
 
-        BYTE buf6[SHA256_BLOCK_SIZE];
+        BYTE buf2[SHA256_BLOCK_SIZE];
     	sha256_init(&ctx);
     	sha256_update(&ctx, text, strlen(text));
-    	sha256_final(&ctx, buf6);
-        print_uint256(buf6);
+    	sha256_final(&ctx, buf2);
+        print_uint256(buf2);
 
-        BYTE buf7[SHA256_BLOCK_SIZE];
         sha256_init(&ctx);
-    	sha256_update(&ctx, buf6, strlen(buf6));
-    	sha256_final(&ctx, buf7);
-        print_uint256(buf7);
+    	sha256_update(&ctx, buf2, strlen(buf2));
+    	sha256_final(&ctx, soln);
+        print_uint256(soln);
 
-        if (sha256_compare(buf7, target) < 0) {
+        if (sha256_compare(soln, target) < 0) {
             printf("OKAY: ");
-            print_uint256(buf7);
+            print_uint256(soln);
             break;
         } else {
             solution++;

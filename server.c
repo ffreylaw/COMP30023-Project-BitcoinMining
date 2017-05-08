@@ -145,6 +145,7 @@ int input_handler(int client_fd, char** input) {
 
 BYTE *proof_of_work(uint32_t difficulty, BYTE *seed, uint64_t solution) {
 	int i = 0;
+	uint64_t nonce = solution;
 
 	BYTE base[32], coefficient[32], target[32];
     BYTE clean[32];
@@ -182,7 +183,7 @@ BYTE *proof_of_work(uint32_t difficulty, BYTE *seed, uint64_t solution) {
             text[count-1] = buf[1];
         }
         buf = (char*)malloc((32 + 1) * sizeof(char));
-        sprintf(buf, "%lx", solution);
+        sprintf(buf, "%lx", nonce);
         for (i = 0; i < strlen(buf); i++) {
             count++;
             text = (char*)realloc(text, count * sizeof(char));
@@ -201,8 +202,9 @@ BYTE *proof_of_work(uint32_t difficulty, BYTE *seed, uint64_t solution) {
         if (sha256_compare(soln, target) < 0) {
 			return soln;
         } else {
-            solution++;
+            nonce++;
         }
     }
+	
 	return NULL;
 }
