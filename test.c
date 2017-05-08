@@ -97,7 +97,8 @@ int main(int argc, char const *argv[]) {
         char *text = (char*)malloc(sizeof(char));
         int count = 0;
         //bool flag = false;
-        char *buf4 = (char*)malloc(2 * sizeof(char));
+        char *buf1;
+        buf1 = (char*)malloc(2 * sizeof(char));
         for (i = 0; i < 32; i++) {
             // if (!flag && (seed[i] != 0x0)) {
             //     flag = true;
@@ -105,17 +106,17 @@ int main(int argc, char const *argv[]) {
             //if (flag) {
                 count+=2;
                 text = (char*)realloc(text, count * sizeof(char));
-                sprintf(buf4, "%02x", seed[i]);
-                text[count-2] = buf4[0];
-                text[count-1] = buf4[1];
+                sprintf(buf1, "%02x", seed[i]);
+                text[count-2] = buf1[0];
+                text[count-1] = buf1[1];
             //}
         }
-        char *buf5 = (char*)malloc((32 + 1) * sizeof(char));
-        sprintf(buf5, "%llx", solution);
-        for (i = 0; i < strlen(buf5); i++) {
+        buf1 = (char*)malloc((32 + 1) * sizeof(char));
+        sprintf(buf1, "%llx", solution);
+        for (i = 0; i < strlen(buf1); i++) {
             count++;
             text = (char*)realloc(text, count * sizeof(char));
-            text[count-1] = buf5[i];
+            text[count-1] = buf1[i];
         }
         printf("text: %s\n", text);
 
@@ -139,7 +140,6 @@ int main(int argc, char const *argv[]) {
             solution++;
         }
     }
-
 
     return 0;
 }

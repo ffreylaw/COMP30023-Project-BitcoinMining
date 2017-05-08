@@ -78,11 +78,11 @@ int main(int argc, char**argv)
 
 	bzero(buffer,256);
 
-	fgets(buffer,255,stdin);
+	//fgets(buffer,255,stdin);
 
     //strcpy(buffer, "PING\r\n");
 
-	//strcpy(buffer, "SOLN 1fffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 10000000232123a2\r\n");
+	strcpy(buffer, "SOLN 1fffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 10000000232123a2\r\n");
 
 
 	//strcpy(buffer, "SOLN 1effffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023216b6e\r\n");
@@ -108,7 +108,7 @@ int main(int argc, char**argv)
 
 
 
-    //printf("%s\n", buffer);
+    printf("%s\n", buffer);
 
 
 	n = write(sockfd,buffer,strlen(buffer));
