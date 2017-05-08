@@ -119,10 +119,6 @@ int input_handler(int client_fd, char** input) {
     char *command = input[0];
     if (!strcmp(command, "PING")) {
         output = "PONG";
-    } else if (!strcmp(command, "PONG")) {
-        output = "ERRO";
-    } else if (!strcmp(command, "OKAY")) {
-        output = "ERRO";
     } else if (!strcmp(command, "SOLN")) {
         uint32_t difficulty = strtoull(input[1], NULL, 16);
         BYTE seed[64];
