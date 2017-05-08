@@ -95,7 +95,7 @@ int main(int argc, char const *argv[]) {
     char *text = (char*)malloc(sizeof(char));
     int count = 0;
     //bool flag = false;
-    char *buf4 = (char*)malloc(2*sizeof(char));
+    char *buf4 = (char*)malloc(2 * sizeof(char));
     for (i = 0; i < 32; i++) {
         // if (!flag && (seed[i] != 0x0)) {
         //     flag = true;
@@ -117,17 +117,20 @@ int main(int argc, char const *argv[]) {
     }
     printf("text: %s\n", text);
 
-    BYTE buf6[SHA256_BLOCK_SIZE];
+
 	SHA256_CTX ctx;
 
+    BYTE buf6[SHA256_BLOCK_SIZE];
 	sha256_init(&ctx);
 	sha256_update(&ctx, text, strlen(text));
 	sha256_final(&ctx, buf6);
-
     print_uint256(buf6);
 
     BYTE buf7[SHA256_BLOCK_SIZE];
-    
+    sha256_init(&ctx);
+	sha256_update(&ctx, buf6, strlen(buf6));
+	sha256_final(&ctx, buf7);
+    print_uint256(buf7);
 
     return 0;
 }
