@@ -89,48 +89,57 @@ int main(int argc, char const *argv[]) {
     print_uint256(target);
 
 
-    BYTE soln[32];
-    uint256_init(soln);
-
-    char *text = (char*)malloc(sizeof(char));
-    int count = 0;
-    //bool flag = false;
-    char *buf4 = (char*)malloc(2 * sizeof(char));
-    for (i = 0; i < 32; i++) {
-        // if (!flag && (seed[i] != 0x0)) {
-        //     flag = true;
-        // }
-        //if (flag) {
-            count+=2;
-            text = (char*)realloc(text, count * sizeof(char));
-            sprintf(buf4, "%02x", seed[i]);
-            text[count-2] = buf4[0];
-            text[count-1] = buf4[1];
-        //}
-    }
-    char *buf5 = (char*)malloc((32 + 1) * sizeof(char));
-    sprintf(buf5, "%llx", solution);
-    for (i = 0; i < strlen(buf5); i++) {
-        count++;
-        text = (char*)realloc(text, count * sizeof(char));
-        text[count-1] = buf5[i];
-    }
-    printf("text: %s\n", text);
-
-
 	SHA256_CTX ctx;
+    bool flag = false;
+    while (!flag) {
+        BYTE soln[32];
+        uint256_init(soln);
+        char *text = (char*)malloc(sizeof(char));
+        int count = 0;
+        //bool flag = false;
+        char *buf4 = (char*)malloc(2 * sizeof(char));
+        for (i = 0; i < 32; i++) {
+            // if (!flag && (seed[i] != 0x0)) {
+            //     flag = true;
+            // }
+            //if (flag) {
+                count+=2;
+                text = (char*)realloc(text, count * sizeof(char));
+                sprintf(buf4, "%02x", seed[i]);
+                text[count-2] = buf4[0];
+                text[count-1] = buf4[1];
+            //}
+        }
+        char *buf5 = (char*)malloc((32 + 1) * sizeof(char));
+        sprintf(buf5, "%llx", solution);
+        for (i = 0; i < strlen(buf5); i++) {
+            count++;
+            text = (char*)realloc(text, count * sizeof(char));
+            text[count-1] = buf5[i];
+        }
+        printf("text: %s\n", text);
 
-    BYTE buf6[SHA256_BLOCK_SIZE];
-	sha256_init(&ctx);
-	sha256_update(&ctx, text, strlen(text));
-	sha256_final(&ctx, buf6);
-    print_uint256(buf6);
+        BYTE buf6[SHA256_BLOCK_SIZE];
+    	sha256_init(&ctx);
+    	sha256_update(&ctx, text, strlen(text));
+    	sha256_final(&ctx, buf6);
+        print_uint256(buf6);
 
-    BYTE buf7[SHA256_BLOCK_SIZE];
-    sha256_init(&ctx);
-	sha256_update(&ctx, buf6, strlen(buf6));
-	sha256_final(&ctx, buf7);
-    print_uint256(buf7);
+        BYTE buf7[SHA256_BLOCK_SIZE];
+        sha256_init(&ctx);
+    	sha256_update(&ctx, buf6, strlen(buf6));
+    	sha256_final(&ctx, buf7);
+        print_uint256(buf7);
+
+        if (sha256_compare(buf7, target) < 0) {
+            printf("OKAY: ");
+            print_uint256(buf7);
+            break;
+        } else {
+            solution++;
+        }
+    }
+
 
     return 0;
 }
