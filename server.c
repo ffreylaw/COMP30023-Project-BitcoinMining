@@ -119,22 +119,29 @@ int input_handler(int client_fd, char** input) {
     char *command = input[0];
     if (!strcmp(command, "PING")) {
         output = "PONG";
-    } else if (!strcmp(command, "SOLN")) {
-		BYTE *soln = proof_of_work(input[1], input[2], input[3]);
-		if (soln != NULL) {
+    } else if (!strcmp(command, "PONG")) {
+		output = "ERRO PONG reserved for server responses";
+	} else if (!strcmp(command, "OKAY")) {
+		output = "ERRO not okay to send OKAY to server";
+	} else if (!strcmp(command, "ERRO")) {
+		output = "ERRO should not send to server";
+	} else if (!strcmp(command, "SOLN")) {
+		if (proof_of_work(input[1], input[2], input[3])) {
 			output = "OKAY";
 		} else {
-			output = "NOT OKAY";
+			output = "ERRO";
 		}
     } else if (!strcmp(command, "WORK")) {
         output = "ERRO";
-    } else {
+    } else if (!strcmp(command, "ABRT")) {
+		output = "ERRO";
+	} else {
         output = "ERRO";
     }
     return write(client_fd, output, TEXT_LEN);
 }
 
-BYTE *proof_of_work(const char *diff_, const char *seed_, const char *soln_) {
+bool proof_of_work(const char *diff_, const char *seed_, const char *soln_) {
 	int i = 0;
 	uint32_t difficulty = strtoull(diff_, NULL, 16);
 	BYTE seed[32];
@@ -192,10 +199,8 @@ BYTE *proof_of_work(const char *diff_, const char *seed_, const char *soln_) {
 	sha256_final(&ctx, soln);
 
     if (sha256_compare(soln, target) < 0) {
-		return soln;
+		return true;
     } else {
-        return NULL;
+        return false;
     }
-
-	return NULL;
 }

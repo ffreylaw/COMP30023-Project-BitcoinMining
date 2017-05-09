@@ -27,6 +27,6 @@ typedef struct {
 void *work_function(void*);
 char **buffer_reader(char*);
 int input_handler(int, char**);
-BYTE *proof_of_work(const char*, const char*, const char*);
+bool proof_of_work(const char*, const char*, const char*);
 
 #endif
