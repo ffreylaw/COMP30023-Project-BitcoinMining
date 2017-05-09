@@ -165,6 +165,12 @@ bool is_solution(const char *difficulty_, const char *seed_, const char *solutio
 		buf[1] = seed_[i+1];
 		seed[i/2] = strtoull(buf, NULL, 16);
 	}
+	BYTE solution[8];
+	for (i = 0; i < 16; i+=2) {
+        buf[0] = solution_[i];
+        buf[1] = solution_[i+1];
+        solution[i/2] = strtoull(buf, NULL, 16);
+    }
 
 	BYTE base[32], coefficient[32], target[32];
     BYTE clean[32];
@@ -191,15 +197,8 @@ bool is_solution(const char *difficulty_, const char *seed_, const char *solutio
 	uint256_init(result);
 
     BYTE text[TEXT_LEN];
-
     int count = 0;
     for (i = 0; i < 32; i++) { text[count++] = seed[i]; }
-	BYTE solution[8];
-	for (i = 0; i < 16; i+=2) {
-        buf[0] = solution_[i];
-        buf[1] = solution_[i+1];
-        solution[i/2] = strtoull(buf, NULL, 16);
-    }
 	for (i = 0; i < 8; i++) { text[count++] = solution[i]; }
 
     uint256_init(clean);
@@ -256,7 +255,6 @@ BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *star
 	uint256_init(result);
 	while (true) {
 		BYTE text[TEXT_LEN];
-
 		int count = 0;
 		for (i = 0; i < 32; i++) { text[count++] = seed[i]; }
 		BYTE *nonce = (BYTE*)malloc(8 * sizeof(BYTE));
