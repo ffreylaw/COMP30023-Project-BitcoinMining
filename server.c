@@ -197,9 +197,9 @@ bool is_solution(const char *difficulty_, const char *seed_, const char *solutio
 	uint256_init(result);
 
     BYTE text[TEXT_LEN];
-    int count = 0;
-    for (i = 0; i < 32; i++) { text[count++] = seed[i]; }
-	for (i = 0; i < 8; i++) { text[count++] = solution[i]; }
+    int idx = 0;
+    for (i = 0; i < 32; i++) { text[idx++] = seed[i]; }
+	for (i = 0; i < 8; i++) { text[idx++] = solution[i]; }
 
     uint256_init(clean);
 	sha256_init(&ctx);
@@ -255,8 +255,8 @@ BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *star
 	uint256_init(result);
 	while (true) {
 		BYTE text[TEXT_LEN];
-		int count = 0;
-		for (i = 0; i < 32; i++) { text[count++] = seed[i]; }
+		int idx = 0;
+		for (i = 0; i < 32; i++) { text[idx++] = seed[i]; }
 		BYTE *nonce = (BYTE*)malloc(8 * sizeof(BYTE));
 		char *soln_buf = (char*)malloc((16 + 1) * sizeof(char));
 		sprintf(soln_buf, "%lx", start);
@@ -265,7 +265,7 @@ BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *star
 			buf[1] = soln_buf[i+1];
 			nonce[i/2] = strtoull(buf, NULL, 16);
 		}
-		for (i = 0; i < 8; i++) { text[count++] = nonce[i]; }
+		for (i = 0; i < 8; i++) { text[idx++] = nonce[i]; }
 
 		uint256_init(clean);
 		sha256_init(&ctx);
