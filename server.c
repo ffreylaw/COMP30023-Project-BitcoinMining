@@ -156,6 +156,7 @@ int input_handler(int client_fd, char** input) {
 
 bool is_solution(const char *difficulty_, const char *seed_, const char *solution_) {
 	int i = 0;
+	
 	uint32_t difficulty = strtoull(difficulty_, NULL, 16);
 	BYTE seed[32];
 	uint256_init(seed);
@@ -219,6 +220,7 @@ bool is_solution(const char *difficulty_, const char *seed_, const char *solutio
 
 BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *start_, const char *worker_count_) {
 	int i = 0;
+
 	uint32_t difficulty = strtoull(difficulty_, NULL, 16);
 	BYTE seed[32];
 	uint256_init(seed);
