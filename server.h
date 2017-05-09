@@ -18,6 +18,8 @@
 #define MASK_ALPHA  0b11111111000000000000000000000000
 #define MASK_BETA   0b00000000111111111111111111111111
 
+#define TEXT_LEN 40
+
 typedef struct {
     int client_fd;
 } client_t;

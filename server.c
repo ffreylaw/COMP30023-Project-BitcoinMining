@@ -116,7 +116,6 @@ char **buffer_reader(char* buffer) {
 
 int input_handler(int client_fd, char** input) {
     char *output = NULL;
-    int len = 40;
     char *command = input[0];
     if (!strcmp(command, "PING")) {
         output = "PONG";
@@ -132,7 +131,7 @@ int input_handler(int client_fd, char** input) {
     } else {
         output = "ERRO";
     }
-    return write(client_fd, output, len);
+    return write(client_fd, output, TEXT_LEN);
 }
 
 BYTE *proof_of_work(const char *diff_, const char *seed_, const char *soln_) {
@@ -172,7 +171,7 @@ BYTE *proof_of_work(const char *diff_, const char *seed_, const char *soln_) {
 	SHA256_CTX ctx;
 	BYTE *soln = (BYTE*)malloc(SHA256_BLOCK_SIZE * sizeof(BYTE));
 	uint256_init(soln);
-    BYTE text[40];
+    BYTE text[TEXT_LEN];
 
     int count = 0;
     for (i = 0; i < 32; i++) { text[count++] = seed[i]; }
@@ -185,7 +184,7 @@ BYTE *proof_of_work(const char *diff_, const char *seed_, const char *soln_) {
 
     uint256_init(clean);
 	sha256_init(&ctx);
-	sha256_update(&ctx, text, 40);
+	sha256_update(&ctx, text, TEXT_LEN);
 	sha256_final(&ctx, clean);
 
     sha256_init(&ctx);
