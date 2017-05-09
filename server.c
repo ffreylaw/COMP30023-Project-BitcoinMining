@@ -126,7 +126,7 @@ int input_handler(int client_fd, char** input) {
 	} else if (!strcmp(command, "ERRO")) {
 		output = "ERRO should not send to server";
 	} else if (!strcmp(command, "SOLN")) {
-		if (proof_of_work(input[1], input[2], input[3])) {
+		if (is_solution(input[1], input[2], input[3])) {
 			output = "OKAY";
 		} else {
 			output = "ERRO";
@@ -141,7 +141,7 @@ int input_handler(int client_fd, char** input) {
     return write(client_fd, output, TEXT_LEN);
 }
 
-bool proof_of_work(const char *diff_, const char *seed_, const char *soln_) {
+bool is_solution(const char *diff_, const char *seed_, const char *soln_) {
 	int i = 0;
 	uint32_t difficulty = strtoull(diff_, NULL, 16);
 	BYTE seed[32];
