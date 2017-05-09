@@ -10,7 +10,7 @@
 #define MASK_BETA   0b00000000111111111111111111111111
 
 int main(int argc, char const *argv[]) {
-    char buf[] ="SOLN 1fffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 10000000232123a2\r\n";
+    char buf[] ="SOLN 1fffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212147\r\n";
     int i = 0;
     char *p = strtok (buf, " \r\n");
     char **array = (char**)malloc(sizeof(char*));
@@ -39,23 +39,23 @@ int main(int argc, char const *argv[]) {
 
     BYTE seed[32];
     uint256_init(seed);
-    char buf2[2];
+    char buf0[2];
     for (i = 0; i < 64; i+=2) {
-        buf2[0] = array[2][i];
-        buf2[1] = array[2][i+1];
-        seed[i/2] = strtoull(buf2, NULL, 16);
+        buf0[0] = array[2][i];
+        buf0[1] = array[2][i+1];
+        seed[i/2] = strtoull(buf0, NULL, 16);
     }
     print_uint256(seed);
 
     printf("\n%d\n", 0b1 << 10);
 
     uint32_t b = difficulty;
-    printf("difficulty: %u\n", b);
+    printf("difficulty: %x\n", b);
 
     uint32_t alpha = (MASK_ALPHA & difficulty) >> 24;
     uint32_t beta = MASK_BETA & difficulty;
-    printf("alpha: %u\n", alpha);
-    printf("beta: %u\n", beta);
+    printf("alpha: %x\n", alpha);
+    printf("beta: %x\n", beta);
 
     // int x = 0x01c0ffee;
     //
@@ -80,58 +80,68 @@ int main(int argc, char const *argv[]) {
         temp_beta >>= 8;
     }
 
+    printf("coefficient: ");
     print_uint256(coefficient);
 
     uint256_exp(clean, base, (8 * (alpha - 3)));
+    printf("exp: ");
     print_uint256(clean);
 
     uint256_mul(target, coefficient, clean);
+    printf("target: ");
     print_uint256(target);
 
+    BYTE nonce[8];
+    char buf1[2];
+    for (i = 0; i < 16; i+=2) {
+        buf1[0] = array[3][i];
+        buf1[1] = array[3][i+1];
+        nonce[i/2] = strtoull(buf1, NULL, 16);
+    }
+    printf("nonce: ");
+    for (i = 0; i < 8; i++) {
+        printf("%02x", nonce[i]);
+    }
+    printf("\n");
 
 	SHA256_CTX ctx;
     BYTE soln[SHA256_BLOCK_SIZE];
     uint256_init(soln);
-    while (true) {
-        char *text = (char*)malloc(sizeof(char));
+    //while (true) {
+        BYTE text[40];
         int count = 0;
-        char *buf1;
-        buf1 = (char*)malloc(2 * sizeof(char));
         for (i = 0; i < 32; i++) {
-            count+=2;
-            text = (char*)realloc(text, count * sizeof(char));
-            sprintf(buf1, "%02x", seed[i]);
-            text[count-2] = buf1[0];
-            text[count-1] = buf1[1];
+            text[count++] = seed[i];
         }
-        buf1 = (char*)malloc((32 + 1) * sizeof(char));
-        sprintf(buf1, "%llx", solution);
-        for (i = 0; i < strlen(buf1); i++) {
-            count++;
-            text = (char*)realloc(text, count * sizeof(char));
-            text[count-1] = buf1[i];
+        for (i = 0; i < 8; i++) {
+            text[count++] = nonce[i];
         }
-        printf("text: %s\n", text);
+        printf("text: ");
+        for (i = 0; i < 40; i++) {
+            printf("%02x", text[i]);
+        }
+        printf("\n");
 
-        BYTE buf2[SHA256_BLOCK_SIZE];
+        uint256_init(clean);
     	sha256_init(&ctx);
-    	sha256_update(&ctx, text, strlen(text));
-    	sha256_final(&ctx, buf2);
-        print_uint256(buf2);
+    	sha256_update(&ctx, text, 40);
+    	sha256_final(&ctx, clean);
+        printf("first hash: ");
+        print_uint256(clean);
 
         sha256_init(&ctx);
-    	sha256_update(&ctx, buf2, strlen(buf2));
+    	sha256_update(&ctx, clean, SHA256_BLOCK_SIZE);
     	sha256_final(&ctx, soln);
+        printf("second hash: ");
         print_uint256(soln);
 
         if (sha256_compare(soln, target) < 0) {
             printf("OKAY: ");
             print_uint256(soln);
-            break;
         } else {
-            solution++;
+            printf("NOT OKAY!\n");
         }
-    }
+    //}
 
     return 0;
 }

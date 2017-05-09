@@ -121,19 +121,11 @@ int input_handler(int client_fd, char** input) {
     if (!strcmp(command, "PING")) {
         output = "PONG";
     } else if (!strcmp(command, "SOLN")) {
-        uint32_t difficulty = strtoull(input[1], NULL, 16);
-		BYTE seed[32];
-	    uint256_init(seed);
-	    char buf[2];
-	    for (int i = 0; i < 64; i+=2) {
-	        buf[0] = input[2][i];
-	        buf[1] = input[2][i+1];
-	        seed[i/2] = strtoull(buf, NULL, 16);
-	    }
-        uint64_t solution = strtoull(input[3], NULL, 16);
-		BYTE *soln = proof_of_work(difficulty, seed, solution);
+		BYTE *soln = proof_of_work(input[1], input[2], input[3]);
 		if (soln != NULL) {
 			output = "OKAY";
+		} else {
+			output = "NOT OKAY";
 		}
     } else if (!strcmp(command, "WORK")) {
         output = "ERRO";
@@ -143,9 +135,19 @@ int input_handler(int client_fd, char** input) {
     return write(client_fd, output, len);
 }
 
-BYTE *proof_of_work(uint32_t difficulty, BYTE *seed, uint64_t solution) {
+BYTE *proof_of_work(const char *diff_, const char *seed_, const char *soln_) {
 	int i = 0;
-	uint64_t nonce = solution;
+	uint32_t difficulty = strtoull(diff_, NULL, 16);
+	BYTE seed[32];
+	uint256_init(seed);
+	char buf[2];
+	for (int i = 0; i < 64; i+=2) {
+		buf[0] = seed_[i];
+		buf[1] = seed_[i+1];
+		seed[i/2] = strtoull(buf, NULL, 16);
+	}
+	uint64_t solution = strtoull(soln_, NULL, 16);
+	BYTE nonce[8];
 
 	BYTE base[32], coefficient[32], target[32];
     BYTE clean[32];
@@ -170,41 +172,31 @@ BYTE *proof_of_work(uint32_t difficulty, BYTE *seed, uint64_t solution) {
 	SHA256_CTX ctx;
 	BYTE *soln = (BYTE*)malloc(SHA256_BLOCK_SIZE * sizeof(BYTE));
 	uint256_init(soln);
-    while (true) {
-        char *text = (char*)malloc(sizeof(char));
-        int count = 0;
-        char *buf = NULL;
-		buf = (char*)malloc(2 * sizeof(char));
-        for (i = 0; i < 32; i++) {
-            count+=2;
-            text = (char*)realloc(text, count * sizeof(char));
-            sprintf(buf, "%02x", seed[i]);
-            text[count-2] = buf[0];
-            text[count-1] = buf[1];
-        }
-        buf = (char*)malloc((32 + 1) * sizeof(char));
-        sprintf(buf, "%lx", nonce);
-        for (i = 0; i < strlen(buf); i++) {
-            count++;
-            text = (char*)realloc(text, count * sizeof(char));
-            text[count-1] = buf[i];
-        }
+    BYTE text[40];
 
-        BYTE out[SHA256_BLOCK_SIZE];
-    	sha256_init(&ctx);
-    	sha256_update(&ctx, text, strlen(text));
-    	sha256_final(&ctx, out);
-
-        sha256_init(&ctx);
-    	sha256_update(&ctx, out, strlen(out));
-    	sha256_final(&ctx, soln);
-
-        if (sha256_compare(soln, target) < 0) {
-			return soln;
-        } else {
-            nonce++;
-        }
+    int count = 0;
+    for (i = 0; i < 32; i++) { text[count++] = seed[i]; }
+	for (i = 0; i < 16; i+=2) {
+        buf[0] = soln_[i];
+        buf[1] = soln_[i+1];
+        nonce[i/2] = strtoull(buf, NULL, 16);
     }
-	
+	for (i = 0; i < 8; i++) { text[count++] = nonce[i]; }
+
+    uint256_init(clean);
+	sha256_init(&ctx);
+	sha256_update(&ctx, text, 40);
+	sha256_final(&ctx, clean);
+
+    sha256_init(&ctx);
+	sha256_update(&ctx, clean, SHA256_BLOCK_SIZE);
+	sha256_final(&ctx, soln);
+
+    if (sha256_compare(soln, target) < 0) {
+		return soln;
+    } else {
+        return NULL;
+    }
+
 	return NULL;
 }
