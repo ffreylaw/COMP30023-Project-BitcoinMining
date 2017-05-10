@@ -105,10 +105,13 @@ void *work_function(void *param) {
 
 /** tokenize the buffer
  */
-char **buffer_reader(char* buffer) {
+char **buffer_reader(char *buffer) {
+	int i = 0;
     char *ptr = strtok(buffer, " \r\n");
+	if (!ptr) {
+		return NULL;
+	}
     char **array = (char**)malloc(sizeof(char*));
-    int i = 0;
     while (ptr != NULL) {
         i++;
         array = (char**)realloc(array, i * sizeof(char*));
@@ -120,10 +123,13 @@ char **buffer_reader(char* buffer) {
 
 /** handle input message
  */
-int input_handler(int client_fd, char** input) {
+int input_handler(int client_fd, char **input) {
     char *output = NULL;
 	int len = TEXT_LEN;
-    char *command = input[0];
+	if (!input) {
+		return write(client_fd, "ERRO invalid input", len);
+	}
+	char *command = input[0];
     if (!strcmp(command, "PING")) {
         output = "PONG";
     } else if (!strcmp(command, "PONG")) {
