@@ -78,6 +78,8 @@ int main(int argc, char* argv[]) {
 	return 0;
 }
 
+/** work function for client thread
+ */
 void *work_function(void *param) {
     client_t *client = (client_t*) param;
     char buffer[256];
@@ -101,6 +103,8 @@ void *work_function(void *param) {
     return NULL;
 }
 
+/** tokenize the buffer
+ */
 char **buffer_reader(char* buffer) {
     char *ptr = strtok(buffer, " \r\n");
     char **array = (char**)malloc(sizeof(char*));
@@ -114,6 +118,8 @@ char **buffer_reader(char* buffer) {
     return array;
 }
 
+/** handle input message
+ */
 int input_handler(int client_fd, char** input) {
     char *output = NULL;
 	int len = TEXT_LEN;
@@ -130,7 +136,7 @@ int input_handler(int client_fd, char** input) {
 		if (is_solution(input[1], input[2], input[3])) {
 			output = "OKAY";
 		} else {
-			output = "ERRO";
+			output = "ERRO solution is not okay";
 		}
     } else if (!strcmp(command, "WORK")) {
 		BYTE *solution = proof_of_work(input[1], input[2], input[3], input[4]);
@@ -147,31 +153,21 @@ int input_handler(int client_fd, char** input) {
         output = out;
 		len = 95 + 1;
     } else if (!strcmp(command, "ABRT")) {
-		output = "ERRO";
+		output = "ERRO me not implement this yet";
 	} else {
         output = "ERRO";
     }
     return write(client_fd, output, len);
 }
 
+/** handle SOLN message, return true if is a solution
+ */
 bool is_solution(const char *difficulty_, const char *seed_, const char *solution_) {
 	int i = 0;
-	
+
 	uint32_t difficulty = strtoull(difficulty_, NULL, 16);
-	BYTE seed[32];
-	uint256_init(seed);
-	char buf[2];
-	for (int i = 0; i < 64; i+=2) {
-		buf[0] = seed_[i];
-		buf[1] = seed_[i+1];
-		seed[i/2] = strtoull(buf, NULL, 16);
-	}
-	BYTE solution[8];
-	for (i = 0; i < 16; i+=2) {
-        buf[0] = solution_[i];
-        buf[1] = solution_[i+1];
-        solution[i/2] = strtoull(buf, NULL, 16);
-    }
+	uint32_t alpha = (MASK_ALPHA & difficulty) >> 24;
+    uint32_t beta = MASK_BETA & difficulty;
 
 	BYTE base[32], coefficient[32], target[32];
     BYTE clean[32];
@@ -180,10 +176,7 @@ bool is_solution(const char *difficulty_, const char *seed_, const char *solutio
     uint256_init(target);
     uint256_init(clean);
 
-	uint32_t alpha = (MASK_ALPHA & difficulty) >> 24;
-    uint32_t beta = MASK_BETA & difficulty;
-
-    base[31] = 0x02;
+	base[31] = 0x02;
     uint32_t temp = beta;
     for (i = 0; i < 32; i++) {
         coefficient[31-i] = temp & 0xff;
@@ -198,9 +191,18 @@ bool is_solution(const char *difficulty_, const char *seed_, const char *solutio
 	uint256_init(result);
 
     BYTE text[TEXT_LEN];
-    int idx = 0;
-    for (i = 0; i < 32; i++) { text[idx++] = seed[i]; }
-	for (i = 0; i < 8; i++) { text[idx++] = solution[i]; }
+	int idx = 0;
+	char buf[2];
+	for (i = 0; i < 64; i+=2) {
+		buf[0] = seed_[i];
+		buf[1] = seed_[i+1];
+		text[idx++] = strtoull(buf, NULL, 16);
+	}
+	for (i = 0; i < 16; i+=2) {
+        buf[0] = solution_[i];
+        buf[1] = solution_[i+1];
+        text[idx++] = strtoull(buf, NULL, 16);
+    }
 
     uint256_init(clean);
 	sha256_init(&ctx);
@@ -218,6 +220,8 @@ bool is_solution(const char *difficulty_, const char *seed_, const char *solutio
     }
 }
 
+/** handle WORK message, return a solution
+ */
 BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *start_, const char *worker_count_) {
 	int i = 0;
 
@@ -225,12 +229,14 @@ BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *star
 	BYTE seed[32];
 	uint256_init(seed);
 	char buf[2];
-	for (int i = 0; i < 64; i+=2) {
+	for (i = 0; i < 64; i+=2) {
 		buf[0] = seed_[i];
 		buf[1] = seed_[i+1];
 		seed[i/2] = strtoull(buf, NULL, 16);
 	}
 	uint64_t start = strtoull(start_, NULL, 16);
+	uint32_t alpha = (MASK_ALPHA & difficulty) >> 24;
+	uint32_t beta = MASK_BETA & difficulty;
 
 	BYTE base[32], coefficient[32], target[32];
 	BYTE clean[32];
@@ -238,9 +244,6 @@ BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *star
 	uint256_init(coefficient);
 	uint256_init(target);
 	uint256_init(clean);
-
-	uint32_t alpha = (MASK_ALPHA & difficulty) >> 24;
-	uint32_t beta = MASK_BETA & difficulty;
 
 	base[31] = 0x02;
 	uint32_t temp = beta;
