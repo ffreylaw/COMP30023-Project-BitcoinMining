@@ -165,9 +165,9 @@ int input_handler(int client_fd, char **input_v, int input_s) {
 				soln[idx++] = buf[0];
 				soln[idx++] = buf[1];
 			}
-			sprintf(out, "SOLN %s %s %s", input_v[1], input_v[2], soln);
+			sprintf(out, "SOLN %s %s %s\r\n", input_v[1], input_v[2], soln);
 	        output = out;
-			len = 95 + 1;
+			len = 95 + 2;
 		}
     } else if (!strcmp(command, "ABRT")) {
 		output = "ERRO         me not implement this yet\r\n";
