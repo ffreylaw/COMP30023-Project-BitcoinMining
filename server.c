@@ -69,6 +69,7 @@ int main(int argc, char* argv[]) {
             perror("ERROR to detach thread");
             exit(EXIT_FAILURE);
         }
+		// B U G !!! when client disconnected unexpectedly
     }
 
     /* close socket */
