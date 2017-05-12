@@ -25,8 +25,8 @@ typedef struct {
 } client_t;
 
 void *work_function(void*);
-char **buffer_reader(char*);
-int input_handler(int, char**);
+char **buffer_reader(char*, int*);
+int input_handler(int, char**, int);
 bool is_solution(const char*, const char*, const char*);
 BYTE *proof_of_work(const char*, const char*, const char*, const char*);
 

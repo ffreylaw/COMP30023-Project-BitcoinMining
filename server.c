@@ -73,7 +73,7 @@ int main(int argc, char* argv[]) {
 
     /* close socket */
 
-	close(socket_fd);
+	//close(socket_fd);
 
 	return 0;
 }
@@ -84,38 +84,41 @@ void *work_function(void *param) {
     client_t *client = (client_t*) param;
     char buffer[256];
 
-    bzero(buffer, 256);
+    //bzero(buffer, 256);
 
     /* Read characters from the connection,
     	then process */
+	while (true) {
+		bzero(buffer, 256);
 
-    if (read(client->client_fd, buffer, 255) < 0) {
-    	perror("ERROR reading from socket");
-    	exit(EXIT_FAILURE);
-    }
+	    if (read(client->client_fd, buffer, 255) < 0) {
+	    	perror("ERROR reading from socket");
+	    	exit(EXIT_FAILURE);
+	    }
 
-	char **input = buffer_reader(buffer);
-    if (input_handler(client->client_fd, input) < 0) {
-    	perror("ERROR writing to socket");
-    	exit(EXIT_FAILURE);
-    }
+		int input_s = 0;
+		char **input_v = buffer_reader(buffer, &input_s);
+	    if (input_handler(client->client_fd, input_v, input_s) < 0) {
+	    	perror("ERROR writing to socket");
+	    	exit(EXIT_FAILURE);
+	    }
+	}
 
     return NULL;
 }
 
 /** tokenize the buffer
  */
-char **buffer_reader(char *buffer) {
-	int i = 0;
+char **buffer_reader(char *buffer, int *s) {
     char *ptr = strtok(buffer, " \r\n");
 	if (!ptr) {
 		return NULL;
 	}
     char **array = (char**)malloc(sizeof(char*));
     while (ptr != NULL) {
-        i++;
-        array = (char**)realloc(array, i * sizeof(char*));
-        array[i-1] = ptr;
+        (*s)++;
+        array = (char**)realloc(array, (*s) * sizeof(char*));
+        array[(*s)-1] = ptr;
         ptr = strtok(NULL, " \r\n");
     }
     return array;
@@ -123,45 +126,53 @@ char **buffer_reader(char *buffer) {
 
 /** handle input message
  */
-int input_handler(int client_fd, char **input) {
+int input_handler(int client_fd, char **input_v, int input_s) {
+	if (!input_v) {
+		return write(client_fd, "ERRO                     invalid input\r\n", TEXT_LEN);
+	}
     char *output = NULL;
 	int len = TEXT_LEN;
-	if (!input) {
-		return write(client_fd, "ERRO invalid input", len);
-	}
-	char *command = input[0];
+	char *command = input_v[0];
     if (!strcmp(command, "PING")) {
-        output = "PONG";
+        output = "PONG\r\n";
+		len = 6;
     } else if (!strcmp(command, "PONG")) {
-		output = "ERRO PONG reserved for server responses";
+		output = "ERRO          reserved server response\r\n";
 	} else if (!strcmp(command, "OKAY")) {
-		output = "ERRO not okay to send OKAY to server";
+		output = "ERRO   not okay to send OKAY to server\r\n";
 	} else if (!strcmp(command, "ERRO")) {
-		output = "ERRO should not send to server";
+		output = "ERRO         should not send to server\r\n";
 	} else if (!strcmp(command, "SOLN")) {
-		if (is_solution(input[1], input[2], input[3])) {
-			output = "OKAY";
+		if (input_s < 4) {
+			output = "ERRO               SOLN less arguments\r\n";
+		} else if (is_solution(input_v[1], input_v[2], input_v[3])) {
+			output = "OKAY\r\n";
+			len = 6;
 		} else {
-			output = "ERRO solution is not okay";
+			output = "ERRO              solution is not okay\r\n";
 		}
     } else if (!strcmp(command, "WORK")) {
-		BYTE *solution = proof_of_work(input[1], input[2], input[3], input[4]);
-		char *out = (char*)malloc((95 + 1) * sizeof(char));
-		char *soln = (char*)malloc((16 + 1) * sizeof(char));
-		char *buf = (char*)malloc(2 * sizeof(char));
-		int idx = 0;
-		for (int i = 0; i < 8; i++) {
-			sprintf(buf, "%02x", solution[i]);
-			soln[idx++] = buf[0];
-			soln[idx++] = buf[1];
+		if (input_s < 5) {
+			output = "ERRO               WORK less arguments\r\n";
+		} else {
+			BYTE *solution = proof_of_work(input_v[1], input_v[2], input_v[3], input_v[4]);
+			char *out = (char*)malloc((95 + 1) * sizeof(char));
+			char *soln = (char*)malloc((16 + 1) * sizeof(char));
+			char *buf = (char*)malloc(2 * sizeof(char));
+			int idx = 0;
+			for (int i = 0; i < 8; i++) {
+				sprintf(buf, "%02x", solution[i]);
+				soln[idx++] = buf[0];
+				soln[idx++] = buf[1];
+			}
+			sprintf(out, "SOLN %s %s %s", input_v[1], input_v[2], soln);
+	        output = out;
+			len = 95 + 1;
 		}
-		sprintf(out, "SOLN %s %s %s", input[1], input[2], soln);
-        output = out;
-		len = 95 + 1;
     } else if (!strcmp(command, "ABRT")) {
-		output = "ERRO me not implement this yet";
+		output = "ERRO         me not implement this yet\r\n";
 	} else {
-        output = "ERRO";
+        output = "ERRO              unrecognized message\r\n";
     }
     return write(client_fd, output, len);
 }
