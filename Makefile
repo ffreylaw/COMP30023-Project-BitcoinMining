@@ -1,18 +1,32 @@
-CC = gcc -std=gnu99
+## CC  = Compiler.
+## CFLAGS = Compiler flags.
+CC	= gcc
+CFLAGS =	-Wall -Wextra -std=c99 -pthread
 
-all: run_test_client clean
 
-test_crypto: crypto/sha256.h crypto/sha256.c crypto/sha256_test.c
-	$(CC) -g -o sha256_test crypto/sha256.c crypto/sha256_test.c
+## OBJ = Object files.
+## SRC = Source files.
+## EXE = Executable name.
 
-test_uint256: uint256.h uint256_test.c
-	$(CC) -g -o uint256_test uint256_test.c
+SRC =		server.c sha256.c
+OBJ =		server.o sha256.o
+EXE = 		server
 
-run_test_client: test_crypto test_uint256
-	./sha256_test
-	./uint256_test
+## Top level target is executable.
+$(EXE):	$(OBJ)
+		$(CC) $(CFLAGS) -o $(EXE) $(OBJ) -lm
 
+
+## Clean: Remove object files and core dump files.
 clean:
-	rm -rf ./sha256_test ./uint256_test *.o
+		/bin/rm $(OBJ)
 
-.PHONY = run_test_client clean
+## Clobber: Performs Clean and removes executable file.
+
+clobber: clean
+		/bin/rm $(EXE)
+
+## Dependencies
+
+server.o:			server.h sha256.h uint256.h
+sha256.o:			sha256.h

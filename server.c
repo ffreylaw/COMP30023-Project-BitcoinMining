@@ -59,6 +59,10 @@ int main(int argc, char* argv[]) {
 
         client_t *client = (client_t*)malloc(sizeof(client_t));
         client->client_fd = client_fd;
+		client->client_addr = client_addr;
+		client->server_addr = server_addr;
+
+		connection_log(client);
 
         pthread_t thread_id;
         if (pthread_create(&thread_id, NULL, work_function, (void*)client)) {
@@ -69,7 +73,7 @@ int main(int argc, char* argv[]) {
             perror("ERROR to detach thread");
             exit(EXIT_FAILURE);
         }
-		// B U G !!! when client disconnected unexpectedly
+		// B U G !!! when client disconnected unexpectedly e.g. ctrl+c
     }
 
     /* close socket */
@@ -306,4 +310,28 @@ BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *star
 			continue;
 		}
 	}
+}
+
+void connection_log(client_t *client) {
+	pthread_mutex_lock(&lock);
+
+	fp = fopen("log.txt", "a");
+
+	char time_buffer[100];
+	time_t now = time(0);
+	strftime(time_buffer, 100, "%d-%m-%Y %H:%M:%S", localtime(&now));
+
+	char ip4[INET_ADDRSTRLEN];
+	inet_ntop(AF_INET, &(client->client_addr.sin_addr), ip4, INET_ADDRSTRLEN);
+
+	fprintf(fp, "[%s](%s)", time_buffer, ip4);
+	fprintf(fp, "(socket_id %d) client connected\n", client->client_fd);
+
+	fclose(fp);
+
+	pthread_mutex_unlock(&lock);
+}
+
+void message_log(client_t *client, char *message) {
+
 }
