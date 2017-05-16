@@ -33,7 +33,7 @@ typedef struct {
 
 void *work_function(void*);
 char **buffer_reader(char*, int*);
-int input_handler(int, char**, int);
+void input_handler(char**, int, char**, int*);
 bool is_solution(const char*, const char*, const char*);
 BYTE *proof_of_work(const char*, const char*, const char*, const char*);
 void connection_log(client_t*);

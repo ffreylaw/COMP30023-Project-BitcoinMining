@@ -100,13 +100,18 @@ void *work_function(void *param) {
 	    	perror("ERROR reading from socket");
 	    	exit(EXIT_FAILURE);
 	    }
+		receive_message_log(client, buffer);
 
 		int input_s = 0;
 		char **input_v = buffer_reader(buffer, &input_s);
-	    if (input_handler(client->client_fd, input_v, input_s) < 0) {
+		char *output = NULL;
+		int len = 0;
+		input_handler(input_v, input_s, &output, &len);
+	    if (write(client->client_fd, output, len) < 0) {
 	    	perror("ERROR writing to socket");
 	    	exit(EXIT_FAILURE);
 	    }
+		send_message_log(client, output);
 	}
 
     return NULL;
@@ -131,34 +136,35 @@ char **buffer_reader(char *buffer, int *s) {
 
 /** handle input message
  */
-int input_handler(int client_fd, char **input_v, int input_s) {
+void input_handler(char **input_v, int input_s, char **output, int *len) {
+    *output = NULL;
+	*len = TEXT_LEN;
 	if (!input_v) {
-		return write(client_fd, "ERRO                     invalid input\r\n", TEXT_LEN);
+		*output = "ERRO                     invalid input\r\n";
+		return;
 	}
-    char *output = NULL;
-	int len = TEXT_LEN;
 	char *command = input_v[0];
     if (!strcmp(command, "PING")) {
-        output = "PONG\r\n";
-		len = 6;
+        *output = "PONG\r\n";
+		*len = 6;
     } else if (!strcmp(command, "PONG")) {
-		output = "ERRO          reserved server response\r\n";
+		*output = "ERRO          reserved server response\r\n";
 	} else if (!strcmp(command, "OKAY")) {
-		output = "ERRO   not okay to send OKAY to server\r\n";
+		*output = "ERRO   not okay to send OKAY to server\r\n";
 	} else if (!strcmp(command, "ERRO")) {
-		output = "ERRO         should not send to server\r\n";
+		*output = "ERRO         should not send to server\r\n";
 	} else if (!strcmp(command, "SOLN")) {
 		if (input_s < 4) {
-			output = "ERRO               SOLN less arguments\r\n";
+			*output = "ERRO               SOLN less arguments\r\n";
 		} else if (is_solution(input_v[1], input_v[2], input_v[3])) {
-			output = "OKAY\r\n";
-			len = 6;
+			*output = "OKAY\r\n";
+			*len = 6;
 		} else {
-			output = "ERRO              solution is not okay\r\n";
+			*output = "ERRO              solution is not okay\r\n";
 		}
     } else if (!strcmp(command, "WORK")) {
 		if (input_s < 5) {
-			output = "ERRO               WORK less arguments\r\n";
+			*output = "ERRO               WORK less arguments\r\n";
 		} else {
 			BYTE *solution = proof_of_work(input_v[1], input_v[2], input_v[3], input_v[4]);
 			char *out = (char*)malloc((95 + 1) * sizeof(char));
@@ -171,15 +177,15 @@ int input_handler(int client_fd, char **input_v, int input_s) {
 				soln[idx++] = buf[1];
 			}
 			sprintf(out, "SOLN %s %s %s\r\n", input_v[1], input_v[2], soln);
-	        output = out;
-			len = 95 + 2;
+	        *output = out;
+			*len = 95 + 2;
 		}
     } else if (!strcmp(command, "ABRT")) {
-		output = "ERRO         me not implement this yet\r\n";
+		*output = "ERRO         me not implement this yet\r\n";
 	} else {
-        output = "ERRO              unrecognized message\r\n";
+        *output = "ERRO              unrecognized message\r\n";
     }
-    return write(client_fd, output, len);
+    return;
 }
 
 /** handle SOLN message, return true if is a solution

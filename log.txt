@@ -1,4 +1,8 @@
-[14-05-2017 21:55:04](127.0.0.1)(socket_id 4) client connected
-[15-05-2017 21:17:57](127.0.0.1)(socket_id 4) client connected
-[15-05-2017 21:21:09](127.0.0.1)(socket_id 4) client connected
-[16-05-2017 14:27:51](127.0.0.1)(socket_id 4) client connected
+[16-05-2017 15:10:24](127.0.0.1)(socket_id 4) client connected
+[16-05-2017 15:10:24](127.0.0.1)(socket_id 4) server receive a message from client: WORK 1effffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212399 04
+
+[16-05-2017 15:10:24](127.0.0.1)(socket_id 4) server send a message to client: SOLN 1effffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 100000002321ed8f
+
+[16-05-2017 15:10:24](127.0.0.1)(socket_id 4) server receive a message from client: 
+[16-05-2017 15:10:24](127.0.0.1)(socket_id 4) server send a message to client: ERRO                     invalid input
+
