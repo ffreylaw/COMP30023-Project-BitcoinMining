@@ -37,6 +37,7 @@ int input_handler(int, char**, int);
 bool is_solution(const char*, const char*, const char*);
 BYTE *proof_of_work(const char*, const char*, const char*, const char*);
 void connection_log(client_t*);
-void message_log(client_t*, char*);
+void receive_message_log(client_t*, char*);
+void send_message_log(client_t*, char*);
 
 #endif

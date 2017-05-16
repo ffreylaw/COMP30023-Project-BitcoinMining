@@ -332,6 +332,42 @@ void connection_log(client_t *client) {
 	pthread_mutex_unlock(&lock);
 }
 
-void message_log(client_t *client, char *message) {
+void receive_message_log(client_t *client, char *message) {
+	pthread_mutex_lock(&lock);
 
+	fp = fopen("log.txt", "a");
+
+	char time_buffer[100];
+	time_t now = time(0);
+	strftime(time_buffer, 100, "%d-%m-%Y %H:%M:%S", localtime(&now));
+
+	char ip4[INET_ADDRSTRLEN];
+	inet_ntop(AF_INET, &(client->client_addr.sin_addr), ip4, INET_ADDRSTRLEN);
+
+	fprintf(fp, "[%s](%s)", time_buffer, ip4);
+	fprintf(fp, "(socket_id %d) server receive a message from client: %s\n", client->client_fd, message);
+
+	fclose(fp);
+
+	pthread_mutex_unlock(&lock);
+}
+
+void send_message_log(client_t *client, char *message) {
+	pthread_mutex_lock(&lock);
+
+	fp = fopen("log.txt", "a");
+
+	char time_buffer[100];
+	time_t now = time(0);
+	strftime(time_buffer, 100, "%d-%m-%Y %H:%M:%S", localtime(&now));
+
+	char ip4[INET_ADDRSTRLEN];
+	inet_ntop(AF_INET, &(client->client_addr.sin_addr), ip4, INET_ADDRSTRLEN);
+
+	fprintf(fp, "[%s](%s)", time_buffer, ip4);
+	fprintf(fp, "(socket_id %d) server send a message to client: %s\n", client->client_fd, message);
+
+	fclose(fp);
+
+	pthread_mutex_unlock(&lock);
 }
