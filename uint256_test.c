@@ -70,5 +70,15 @@ int main (int argc, char **argv) {
     assert (clean[24] == 0x80);
     printf ("TEST #4 PASSED\n");
 
-    uint256_init (clean);
+    printf ("TEST #5: uint256 add overflow test\n");
+    BYTE uint256e[32], uint256f[32], uint256g[32];
+    uint256_init (uint256e);
+    uint256_init (uint256f);
+    uint256_init (uint256g);
+    
+    uint256e[31] = 0xff;
+    uint256f[31] = 0x01;
+    uint256_add (uint256g, uint256e, uint256f);
+    assert (uint256g[30] == 0x1);
+    printf ("TEST #5 PASSED\n");
 }
