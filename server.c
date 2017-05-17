@@ -2,13 +2,30 @@
 
 int main(int argc, char* argv[]) {
 
-	int socket_fd, client_fd, port_no, client_len;
-	struct sockaddr_in server_addr, client_addr;
+	int socket_fd, port_no;
+	struct sockaddr_in server_addr;
+
+	signal(SIGINT, interrupt_handler);
 
 	if (argc < 2) {
 		fprintf(stderr,"ERROR no port provided\n");
 		exit(EXIT_FAILURE);
 	}
+
+	/* Initialize mutex */
+
+	if (pthread_mutex_init(&lock, NULL) != 0) {
+		perror("ERROR on mutex init");
+        exit(EXIT_FAILURE);
+	}
+
+	/* Create log file */
+
+	if ((fp = fopen("log.txt", "w")) == NULL) {
+		perror("ERROR to create log file");
+		exit(EXIT_FAILURE);
+	}
+	fclose(fp);
 
 	 /* Create TCP socket */
 
@@ -18,7 +35,6 @@ int main(int argc, char* argv[]) {
 		perror("ERROR opening socket");
 		exit(EXIT_FAILURE);
 	}
-
 
 	bzero((char *) &server_addr, sizeof(server_addr));
 
@@ -44,36 +60,20 @@ int main(int argc, char* argv[]) {
 
 	listen(socket_fd, 5);
 
-	client_len = sizeof(client_addr);
-
 	/* Accept a connection - block until a connection is ready to
 	 be accepted. Get back a new file descriptor to communicate on. */
 
-    while (true) {
-        client_fd = accept(socket_fd, (struct sockaddr *) &client_addr, &client_len);
+	arg_t *arg = (arg_t*)malloc(sizeof(arg_t));
+    arg->socket_fd = socket_fd;
+	arg->server_addr = server_addr;
 
-        if (client_fd < 0) {
-    		perror("ERROR on accept");
-    		exit(EXIT_FAILURE);
-    	}
-
-        client_t *client = (client_t*)malloc(sizeof(client_t));
-        client->client_fd = client_fd;
-		client->client_addr = client_addr;
-		client->server_addr = server_addr;
-
-		connection_log(client);
-
-        pthread_t thread_id;
-        if (pthread_create(&thread_id, NULL, work_function, (void*)client)) {
-            perror("ERROR to create thread");
-            exit(EXIT_FAILURE);
-        }
-        if (pthread_detach(thread_id)) {
-            perror("ERROR to detach thread");
-            exit(EXIT_FAILURE);
-        }
-		// B U G !!! when client disconnected unexpectedly e.g. ctrl+c
+    if (pthread_create(&main_thread, NULL, main_work_function, (void*)arg)) {
+        perror("ERROR to create thread");
+        exit(EXIT_FAILURE);
+    }
+    if (pthread_join(main_thread, NULL)) {
+        perror("ERROR to join thread");
+        exit(EXIT_FAILURE);
     }
 
     /* close socket */
@@ -85,21 +85,75 @@ int main(int argc, char* argv[]) {
 
 /** work function for client thread
  */
-void *work_function(void *param) {
-    client_t *client = (client_t*) param;
-    char buffer[256];
+void *main_work_function(void *param) {
+	arg_t *arg = (arg_t*)param;
+	int socket_fd = arg->socket_fd;
+	struct sockaddr_in server_addr = arg->server_addr;
+	struct sockaddr_in client_addr;
+	socklen_t client_len = sizeof(client_addr);
 
-    //bzero(buffer, 256);
+	int client_fd;
 
     /* Read characters from the connection,
     	then process */
 	while (true) {
+		client_fd = accept(socket_fd, (struct sockaddr *) &client_addr, &client_len);
+
+        if (client_fd < 0) {
+    		perror("ERROR on accept");
+    		exit(EXIT_FAILURE);
+    	}
+
+		if (thread_count >= MAX_THREADS) {
+			if (write(client_fd, "Thread limit exceeded\n", 22) < 0) {
+				perror("ERROR writing to socket");
+				exit(EXIT_FAILURE);
+			}
+			close(client_fd);
+			continue;
+		}
+
+		int idx = 0;
+		for(int i = 0; i < MAX_THREADS; i++){
+			if (client_threads[i] == 0) {
+				idx = i;
+				break;
+			}
+		}
+
+		client_t *client = (client_t*)malloc(sizeof(client_t));
+		client->client_fd = client_fd;
+		client->server_addr = server_addr;
+		client->client_addr = client_addr;
+		client->thread_idx = idx;
+
+		client_thread_args[idx] = *client;
+
+		connection_log(client);
+
+	    if (pthread_create(&client_threads[idx], NULL, message_work_function, (void*)&(client_thread_args[idx]))) {
+	        perror("ERROR to create thread");
+	        exit(EXIT_FAILURE);
+	    } else {
+			thread_count++;
+		}
+	}
+
+    return NULL;
+}
+
+void *message_work_function(void *param) {
+	client_t *client = (client_t*)param;
+
+	char buffer[256];
+
+	while (true) {
 		bzero(buffer, 256);
 
-	    if (read(client->client_fd, buffer, 255) < 0) {
-	    	perror("ERROR reading from socket");
-	    	exit(EXIT_FAILURE);
-	    }
+		if (read(client->client_fd, buffer, 255) < 0) {
+			perror("ERROR reading from socket");
+			break;
+		}
 		receive_message_log(client, buffer);
 
 		int input_s = 0;
@@ -107,14 +161,24 @@ void *work_function(void *param) {
 		char *output = NULL;
 		int len = 0;
 		input_handler(input_v, input_s, &output, &len);
-	    if (write(client->client_fd, output, len) < 0) {
-	    	perror("ERROR writing to socket");
-	    	exit(EXIT_FAILURE);
-	    }
+
+		if (write(client->client_fd, output, len) < 0) {
+			perror("ERROR writing to socket");
+			break;
+		}
 		send_message_log(client, output);
 	}
 
-    return NULL;
+	close(client->client_fd);
+
+	pthread_mutex_lock(&lock);
+	client_threads[client->thread_idx] = 0;
+	thread_count--;
+	pthread_mutex_unlock(&lock);
+
+	pthread_exit(NULL);
+
+	return NULL;
 }
 
 /** tokenize the buffer
@@ -251,6 +315,8 @@ bool is_solution(const char *difficulty_, const char *seed_, const char *solutio
 /** handle WORK message, return a solution
  */
 BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *start_, const char *worker_count_) {
+	(void) worker_count_;
+
 	int i = 0;
 
 	uint32_t difficulty = strtoull(difficulty_, NULL, 16);
@@ -292,7 +358,7 @@ BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *star
 		for (i = 0; i < 32; i++) { text[idx++] = seed[i]; }
 		BYTE *nonce = (BYTE*)malloc(8 * sizeof(BYTE));
 		char *soln_buf = (char*)malloc((16 + 1) * sizeof(char));
-		sprintf(soln_buf, "%lx", start);
+		sprintf(soln_buf, "%llx", start);
 		for (i = 0; i < 16; i+=2) {
 			buf[0] = soln_buf[i];
 			buf[1] = soln_buf[i+1];
@@ -323,9 +389,9 @@ void connection_log(client_t *client) {
 
 	fp = fopen("log.txt", "a");
 
-	char time_buffer[100];
+	char time_buffer[BUFFER_SIZE];
 	time_t now = time(0);
-	strftime(time_buffer, 100, "%d-%m-%Y %H:%M:%S", localtime(&now));
+	strftime(time_buffer, BUFFER_SIZE, "%d-%m-%Y %H:%M:%S", localtime(&now));
 
 	char ip4[INET_ADDRSTRLEN];
 	inet_ntop(AF_INET, &(client->client_addr.sin_addr), ip4, INET_ADDRSTRLEN);
@@ -343,15 +409,15 @@ void receive_message_log(client_t *client, char *message) {
 
 	fp = fopen("log.txt", "a");
 
-	char time_buffer[100];
+	char time_buffer[BUFFER_SIZE];
 	time_t now = time(0);
-	strftime(time_buffer, 100, "%d-%m-%Y %H:%M:%S", localtime(&now));
+	strftime(time_buffer, BUFFER_SIZE, "%d-%m-%Y %H:%M:%S", localtime(&now));
 
 	char ip4[INET_ADDRSTRLEN];
 	inet_ntop(AF_INET, &(client->client_addr.sin_addr), ip4, INET_ADDRSTRLEN);
 
 	fprintf(fp, "[%s](%s)", time_buffer, ip4);
-	fprintf(fp, "(socket_id %d) server receive a message from client: %s\n", client->client_fd, message);
+	fprintf(fp, "(socket_id %d) server receive a message from client: %s", client->client_fd, message);
 
 	fclose(fp);
 
@@ -363,17 +429,27 @@ void send_message_log(client_t *client, char *message) {
 
 	fp = fopen("log.txt", "a");
 
-	char time_buffer[100];
+	char time_buffer[BUFFER_SIZE];
 	time_t now = time(0);
-	strftime(time_buffer, 100, "%d-%m-%Y %H:%M:%S", localtime(&now));
+	strftime(time_buffer, BUFFER_SIZE, "%d-%m-%Y %H:%M:%S", localtime(&now));
 
 	char ip4[INET_ADDRSTRLEN];
 	inet_ntop(AF_INET, &(client->client_addr.sin_addr), ip4, INET_ADDRSTRLEN);
 
 	fprintf(fp, "[%s](%s)", time_buffer, ip4);
-	fprintf(fp, "(socket_id %d) server send a message to client: %s\n", client->client_fd, message);
+	fprintf(fp, "(socket_id %d) server send a message to client: %s", client->client_fd, message);
 
 	fclose(fp);
 
 	pthread_mutex_unlock(&lock);
+}
+
+void interrupt_handler(int sig) {
+	(void) sig;
+	
+	for (int i = 0; i < MAX_THREADS; i++){
+		if (client_threads[i] != 0)
+			pthread_cancel(client_threads[i]);
+	}
+	pthread_cancel(main_thread);
 }
