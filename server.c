@@ -1,5 +1,7 @@
 #include "server.h"
 
+/** Main function
+ */
 int main(int argc, char* argv[]) {
 
 	int socket_fd, port_no;
@@ -83,7 +85,7 @@ int main(int argc, char* argv[]) {
 	return 0;
 }
 
-/** work function for client thread
+/** Main work function for client thread
  */
 void *main_work_function(void *param) {
 	arg_t *arg = (arg_t*)param;
@@ -142,6 +144,8 @@ void *main_work_function(void *param) {
     return NULL;
 }
 
+/** Work function for handling a message
+ */
 void *message_work_function(void *param) {
 	client_t *client = (client_t*)param;
 
@@ -181,7 +185,7 @@ void *message_work_function(void *param) {
 	return NULL;
 }
 
-/** tokenize the buffer
+/** Tokenize the buffer, split string by space \r \n
  */
 char **buffer_reader(char *buffer, int *s) {
     char *ptr = strtok(buffer, " \r\n");
@@ -198,7 +202,7 @@ char **buffer_reader(char *buffer, int *s) {
     return array;
 }
 
-/** handle input message
+/** Handle input message
  */
 void input_handler(char **input_v, int input_s, char **output, int *len) {
     *output = NULL;
@@ -252,7 +256,7 @@ void input_handler(char **input_v, int input_s, char **output, int *len) {
     return;
 }
 
-/** handle SOLN message, return true if is a solution
+/** Handle SOLN message; return true if is a solution
  */
 bool is_solution(const char *difficulty_, const char *seed_, const char *solution_) {
 	int i = 0;
@@ -312,7 +316,7 @@ bool is_solution(const char *difficulty_, const char *seed_, const char *solutio
     }
 }
 
-/** handle WORK message, return a solution
+/** Handle WORK message; return a solution
  */
 BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *start_, const char *worker_count_) {
 	(void) worker_count_;
@@ -384,6 +388,8 @@ BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *star
 	}
 }
 
+/** Log for connection
+ */
 void connection_log(client_t *client) {
 	pthread_mutex_lock(&lock);
 
@@ -404,6 +410,8 @@ void connection_log(client_t *client) {
 	pthread_mutex_unlock(&lock);
 }
 
+/** Log for receiving message
+ */
 void receive_message_log(client_t *client, char *message) {
 	pthread_mutex_lock(&lock);
 
@@ -424,6 +432,8 @@ void receive_message_log(client_t *client, char *message) {
 	pthread_mutex_unlock(&lock);
 }
 
+/** Log for sending message
+ */
 void send_message_log(client_t *client, char *message) {
 	pthread_mutex_lock(&lock);
 
@@ -444,9 +454,11 @@ void send_message_log(client_t *client, char *message) {
 	pthread_mutex_unlock(&lock);
 }
 
+/** Interrupt signal handler
+ */
 void interrupt_handler(int sig) {
 	(void) sig;
-	
+
 	for (int i = 0; i < MAX_THREADS; i++){
 		if (client_threads[i] != 0)
 			pthread_cancel(client_threads[i]);
