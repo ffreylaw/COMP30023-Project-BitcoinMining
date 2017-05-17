@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
 	}
 	fclose(fp);
 
-	 /* Create TCP socket */
+	/* Create TCP socket */
 
 	socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -50,7 +50,7 @@ int main(int argc, char* argv[]) {
 	server_addr.sin_addr.s_addr = INADDR_ANY;
 	server_addr.sin_port = htons(port_no);  // store in machine-neutral format
 
-	 /* Bind address to the socket */
+	/* Bind address to the socket */
 
 	if (bind(socket_fd, (struct sockaddr *) &server_addr, sizeof(server_addr)) < 0) {
 		perror("ERROR on binding");
@@ -78,10 +78,6 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    /* close socket */
-
-	//close(socket_fd);
-
 	return 0;
 }
 
@@ -106,7 +102,7 @@ void *main_work_function(void *param) {
     		exit(EXIT_FAILURE);
     	}
 
-		if (thread_count >= MAX_THREADS) {
+		if (thread_count >= MAX_CLIENTS) {
 			if (write(client_fd, "Thread limit exceeded\n", 22) < 0) {
 				perror("ERROR writing to socket");
 				exit(EXIT_FAILURE);
@@ -116,8 +112,8 @@ void *main_work_function(void *param) {
 		}
 
 		int idx = 0;
-		for(int i = 0; i < MAX_THREADS; i++){
-			if (client_threads[i] == 0) {
+		for(int i = 0; i < MAX_CLIENTS; i++){
+			if (clients[i] == 0) {
 				idx = i;
 				break;
 			}
@@ -129,11 +125,11 @@ void *main_work_function(void *param) {
 		client->client_addr = client_addr;
 		client->thread_idx = idx;
 
-		client_thread_args[idx] = *client;
+		client_args[idx] = *client;
 
 		connection_log(client);
 
-	    if (pthread_create(&client_threads[idx], NULL, message_work_function, (void*)&(client_thread_args[idx]))) {
+	    if (pthread_create(&(clients[idx]), NULL, message_work_function, (void*)&(client_args[idx]))) {
 	        perror("ERROR to create thread");
 	        exit(EXIT_FAILURE);
 	    } else {
@@ -176,7 +172,7 @@ void *message_work_function(void *param) {
 	close(client->client_fd);
 
 	pthread_mutex_lock(&lock);
-	client_threads[client->thread_idx] = 0;
+	clients[client->thread_idx] = 0;
 	thread_count--;
 	pthread_mutex_unlock(&lock);
 
@@ -459,9 +455,9 @@ void send_message_log(client_t *client, char *message) {
 void interrupt_handler(int sig) {
 	(void) sig;
 
-	for (int i = 0; i < MAX_THREADS; i++){
-		if (client_threads[i] != 0)
-			pthread_cancel(client_threads[i]);
+	for (int i = 0; i < MAX_CLIENTS; i++){
+		if (clients[i] != 0)
+			pthread_cancel(clients[i]);
 	}
 	pthread_cancel(main_thread);
 }

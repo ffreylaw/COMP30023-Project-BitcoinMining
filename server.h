@@ -23,7 +23,7 @@
 
 #define TEXT_LEN 40
 #define BUFFER_SIZE 100
-#define MAX_THREADS 100
+#define MAX_CLIENTS 100
 
 pthread_mutex_t lock;
 FILE *fp;
@@ -41,8 +41,8 @@ typedef struct {
 } client_t;
 
 pthread_t main_thread;
-pthread_t client_threads[MAX_THREADS];
-client_t client_thread_args[MAX_THREADS];
+pthread_t clients[MAX_CLIENTS];
+client_t client_args[MAX_CLIENTS];
 
 int thread_count = 0;
 
