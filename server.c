@@ -233,12 +233,8 @@ void input_handler(char **input_v, int input_s, char **output, int *len) {
 			BYTE *solution = proof_of_work(input_v[1], input_v[2], input_v[3], input_v[4]);
 			char *out = (char*)malloc((95 + 1) * sizeof(char));
 			char *soln = (char*)malloc((16 + 1) * sizeof(char));
-			char *buf = (char*)malloc(2 * sizeof(char));
-			int idx = 0;
 			for (int i = 0; i < 8; i++) {
-				sprintf(buf, "%02x", solution[i]);
-				soln[idx++] = buf[0];
-				soln[idx++] = buf[1];
+				sprintf(soln+(2*i), "%02x", solution[i]);
 			}
 			sprintf(out, "SOLN %s %s %s\r\n", input_v[1], input_v[2], soln);
 	        *output = out;
@@ -269,6 +265,8 @@ bool is_solution(const char *difficulty_, const char *seed_, const char *solutio
     uint256_init(clean);
 
 	base[31] = 0x02;
+
+	// get coefficient of target
     uint32_t temp = beta;
     for (i = 0; i < 32; i++) {
         coefficient[31-i] = temp & 0xff;

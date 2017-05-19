@@ -1,6 +1,4 @@
-[17-05-2017 19:54:13](127.0.0.1)(socket_id 4) client connected
-[17-05-2017 19:54:14](127.0.0.1)(socket_id 4) server receive a message from client: PING
-[17-05-2017 19:54:14](127.0.0.1)(socket_id 4) server send a message to client: PONG
-[17-05-2017 19:54:21](127.0.0.1)(socket_id 4) server receive a message from client: AAA
-[17-05-2017 19:54:21](127.0.0.1)(socket_id 4) server send a message to client: ERRO              unrecognized message
-[17-05-2017 19:54:31](127.0.0.1)(socket_id 4) server receive a message from client: [17-05-2017 19:54:31](127.0.0.1)(socket_id 4) server send a message to client: ERRO                     invalid input
+[19-05-2017 10:20:33](127.0.0.1)(socket_id 4) client connected
+[19-05-2017 10:20:33](127.0.0.1)(socket_id 4) server receive a message from client: WORK 1fffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212399 01
+[19-05-2017 10:20:33](127.0.0.1)(socket_id 4) server send a message to client: SOLN 1fffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212605
+[19-05-2017 10:20:33](127.0.0.1)(socket_id 4) server receive a message from client: [19-05-2017 10:20:33](127.0.0.1)(socket_id 4) server send a message to client: ERRO                     invalid input
