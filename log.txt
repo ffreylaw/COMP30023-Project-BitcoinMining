@@ -1,16 +1,6 @@
-[20-05-2017 21:31:05](127.0.0.1)(socket_id 4) client connected
-[20-05-2017 21:31:09](127.0.0.1)(socket_id 4) server receive a message from client: WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212399 01
-[20-05-2017 21:31:10](127.0.0.1)(socket_id 4) server receive a message from client: WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212399 01
-[20-05-2017 21:31:10](127.0.0.1)(socket_id 4) server receive a message from client: WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212399 01
-[20-05-2017 21:31:11](127.0.0.1)(socket_id 4) server receive a message from client: WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212399 01
-[20-05-2017 21:31:15](127.0.0.1)(socket_id 4) server receive a message from client: PING
-[20-05-2017 21:31:15](127.0.0.1)(socket_id 4) server send a message to client: PONG
-[20-05-2017 21:31:16](127.0.0.1)(socket_id 4) server receive a message from client: PING
-[20-05-2017 21:31:16](127.0.0.1)(socket_id 4) server send a message to client: PONG
-[20-05-2017 21:31:24](127.0.0.1)(socket_id 4) server receive a message from client: ABRT
-[20-05-2017 21:31:24](127.0.0.1)(socket_id 4) server send a message to client: OKAY
-[20-05-2017 21:31:30](127.0.0.1)(socket_id 4) server receive a message from client: PING
-[20-05-2017 21:31:30](127.0.0.1)(socket_id 4) server send a message to client: PONG
-[20-05-2017 21:31:36](127.0.0.1)(socket_id 4) server receive a message from client: [20-05-2017 21:31:36](127.0.0.1)(socket_id 4) server receive a message from client: [20-05-2017 21:31:36](127.0.0.1)(socket_id 4) server send a message to client: ERRO                     invalid input
-ERRO                     invalid input
-[20-05-2017 21:31:36](127.0.0.1)(socket_id 4) server send a message to client: ERRO                     invalid input
+[21-05-2017 03:14:49](127.0.0.1)(socket_id 4) client connected
+[21-05-2017 03:14:56](127.0.0.1)(socket_id 4) server receive a message from client: WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212399 01
+[21-05-2017 03:14:57](127.0.0.1)(socket_id 4) server receive a message from client: WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212399 01
+[21-05-2017 03:14:57](127.0.0.1)(socket_id 4) server receive a message from client: WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212399 01
+[21-05-2017 03:15:01](127.0.0.1)(socket_id 4) server receive a message from client: ABRT
+[21-05-2017 03:15:01](127.0.0.1)(socket_id 4) server send a message to client: OKAY

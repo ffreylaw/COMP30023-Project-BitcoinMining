@@ -45,7 +45,8 @@ typedef struct message {
     client_t *client;
 	pthread_t *message_threads;
 	int *message_count;
-	char buffer[256];
+	int input_s;
+	char **input_v;
 	int thread_idx;
 } message_t;
 

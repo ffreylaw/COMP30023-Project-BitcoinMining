@@ -70,7 +70,7 @@ int main(int argc, char* argv[]) {
 	arg->server_addr = server_addr;
 
     if (pthread_create(&main_thread, NULL, main_work_function, (void*)arg)) {
-        perror("ERROR to create thread");
+        perror("ERROR to create main thread");
         exit(EXIT_FAILURE);
     }
     if (pthread_join(main_thread, NULL)) {
@@ -113,7 +113,7 @@ void *main_work_function(void *param) {
 
 		int idx = 0;
 		for(int i = 0; i < MAX_CLIENTS; i++){
-			if (client_threads[i] == 0) {
+			if (clients[i] == 0) {
 				idx = i;
 				break;
 			}
@@ -129,8 +129,8 @@ void *main_work_function(void *param) {
 
 		connection_log(client);
 
-	    if (pthread_create(&(client_threads[idx]), NULL, client_work_function, (void*)&(client_args[idx]))) {
-	        perror("ERROR to create thread");
+	    if (pthread_create(&(clients[idx]), NULL, client_work_function, (void*)&(client_args[idx]))) {
+	        perror("ERROR to create client thread");
 	        exit(EXIT_FAILURE);
 	    } else {
 			client_count++;
@@ -140,57 +140,115 @@ void *main_work_function(void *param) {
     return NULL;
 }
 
-/** Work function for handling a message
+/** Work function for handling a client
  */
 void *client_work_function(void *param) {
 	client_t *client = (client_t*)param;
 
-	pthread_t work_threads[MAX_PENGDING_JOBS];
-	int work_count = 0;
+	pthread_t message_threads[10];
+	int message_count = 0;
 
 	char buffer[256];
 
 	while (true) {
-		printf("%d\n", work_count);
 		bzero(buffer, 256);
 
 		if (read(client->client_fd, buffer, 255) < 0) {
 			perror("ERROR reading from socket");
+			pthread_mutex_lock(&lock);
+			for (int i = 0; i < MAX_PENGDING_JOBS; i++){
+				if (message_threads[i] != 0) {
+					pthread_cancel(message_threads[i]);
+				}
+				message_threads[i] = 0;
+			}
+			message_count = 0;
+			pthread_mutex_unlock(&lock);
 			break;
 		}
 
-		if (buffer[0] == '\0') {
+		int input_s = 0;
+		char **input_v = buffer_reader(buffer, &input_s);
+
+		if (input_v == NULL) {
+			pthread_mutex_lock(&lock);
+			for (int i = 0; i < MAX_PENGDING_JOBS; i++){
+				if (message_threads[i] != 0) {
+					pthread_cancel(message_threads[i]);
+				}
+				message_threads[i] = 0;
+			}
+			message_count = 0;
+			pthread_mutex_unlock(&lock);
 			break;
-		}
+		} else if (!strcmp(input_v[0], "WORK")) {
+			if (message_count >= 10) {
+				if (write(client->client_fd, "Pending job limit exceeded\n", 27) < 0) {
+					perror("ERROR writing to socket");
+					exit(EXIT_FAILURE);
+				}
+				continue;
+			}
 
-		receive_message_log(client, buffer);
+			receive_message_log(client, buffer);
 
-		int idx = 0;
-		for(int i = 0; i < MAX_PENGDING_JOBS; i++) {
-			if (work_threads[i] == 0) {
-				idx = i;
+			int idx = 0;
+			for(int i = 0; i < MAX_PENGDING_JOBS; i++){
+				if (message_threads[i] == 0) {
+					idx = i;
+					break;
+				}
+			}
+
+			message_t *message = (message_t*)malloc(sizeof(message_t));
+			message->client = client;
+			message->message_threads = message_threads;
+			message->message_count = &message_count;
+			message->input_s = input_s;
+			message->input_v = (char**)malloc(input_s*sizeof(char*));
+			for (int i = 0; i < input_s; i++) {
+				message->input_v[i] = (char*)malloc((strlen(input_v[i])+1)*sizeof(char));
+				memcpy(message->input_v[i], input_v[i], strlen(input_v[i])+1);
+				message->input_v[i][strlen(input_v[i])] = '\0';
+			}
+			message->thread_idx = idx;
+
+			if (pthread_create(&(message_threads[idx]), NULL, message_work_function, (void*)message)) {
+		        perror("ERROR to create message thread");
+		        exit(EXIT_FAILURE);
+		    } else {
+				message_count++;
+			}
+		} else {
+			receive_message_log(client, buffer);
+
+			message_t *message = (message_t*)malloc(sizeof(message_t));
+			message->message_threads = message_threads;
+			message->message_count = &message_count;
+
+			char *output = NULL;
+			int len = 0;
+			input_handler(input_v, input_s, &output, &len, message);
+
+			if (write(client->client_fd, output, len) < 0) {
+				perror("ERROR writing to socket");
 				break;
 			}
+			send_message_log(client, output);
 		}
-
-		message_t *message = (message_t*)malloc(sizeof(message_t));
-		message->client = client;
-		message->work_threads = work_threads;
-		message->work_count = &work_count;
-		message->buffer = (char*)malloc(256 * sizeof(char));
-		memcpy(message->buffer, buffer, 256);
-		message->thread_idx = idx;
-
-		if (pthread_create(&(work_threads[idx]), NULL, message_work_function, (void*)message)) {
-	        perror("ERROR to create thread");
-	        exit(EXIT_FAILURE);
-	    }
 	}
 
 	close(client->client_fd);
 
 	pthread_mutex_lock(&lock);
-	client_threads[client->thread_idx] = 0;
+	for (int i = 0; i < MAX_PENGDING_JOBS; i++){
+		if (message_threads[i] != 0) {
+			pthread_cancel(message_threads[i]);
+		}
+		message_threads[i] = 0;
+	}
+	message_count = 0;
+	clients[client->thread_idx] = 0;
 	client_count--;
 	pthread_mutex_unlock(&lock);
 
@@ -199,85 +257,14 @@ void *client_work_function(void *param) {
 	return NULL;
 }
 
-/** Handle input message
+/** Work function for handling a message
  */
 void *message_work_function(void *param) {
 	message_t *message = (message_t*)param;
-	int n = 0;
-	char **input = buffer_reader(message->buffer, &n);
-    char *output = NULL;
-	int len = TEXT_LEN;
-	if (!input) {
-		output = "ERRO                     invalid input\r\n";
-	} else {
-		char *command = input[0];
-	    if (!strcmp(command, "PING")) {
-	        output = "PONG\r\n";
-			len = 6;
-	    } else if (!strcmp(command, "PONG")) {
-			output = "ERRO          reserved server response\r\n";
-		} else if (!strcmp(command, "OKAY")) {
-			output = "ERRO   not okay to send OKAY to server\r\n";
-		} else if (!strcmp(command, "ERRO")) {
-			output = "ERRO         should not send to server\r\n";
-		} else if (!strcmp(command, "SOLN")) {
-			if (n < 4) {
-				output = "ERRO               SOLN less arguments\r\n";
-			} else if (is_solution(input[1], input[2], input[3])) {
-				output = "OKAY\r\n";
-				len = 6;
-			} else {
-				output = "ERRO              solution is not okay\r\n";
-			}
-	    } else if (!strcmp(command, "WORK")) {
-			if (*(message->work_count) >= MAX_PENGDING_JOBS) {
-				if (write(message->client->client_fd, "Pending job limit exceeded\n", 27) < 0) {
-					perror("ERROR writing to socket");
-					exit(EXIT_FAILURE);
-				}
-				return NULL;
-			}
 
-			pthread_mutex_lock(&lock);
-			*(message->work_count) += 1;
-			pthread_mutex_unlock(&lock);
-
-			if (n < 5) {
-				output = "ERRO               WORK less arguments\r\n";
-			} else {
-				BYTE *solution = proof_of_work(input[1], input[2], input[3], input[4]);
-				char *out = (char*)malloc((95 + 2) * sizeof(char));
-				char *soln = (char*)malloc((16 + 1) * sizeof(char));
-				for (int i = 0; i < 8; i++) {
-					sprintf(soln+(2*i), "%02x", solution[i]);
-				}
-				sprintf(out, "SOLN %s %s %s\r\n", input[1], input[2], soln);
-		        output = out;
-				len = 95 + 2;
-			}
-
-			pthread_mutex_lock(&lock);
-			*(message->work_count) -= 1;
-			pthread_mutex_unlock(&lock);
-
-	    } else if (!strcmp(command, "ABRT")) {
-			pthread_mutex_lock(&lock);
-			for (int i = 0; i < MAX_PENGDING_JOBS; i++){
-				if ((message->work_threads[i] != 0) &&
-					(message->work_threads[i] != message->work_threads[message->thread_idx])) {
-					pthread_cancel(message->work_threads[i]);
-				}
-				message->work_threads[i] = 0;
-			}
-			*(message->work_count) = 0;
-			pthread_mutex_unlock(&lock);
-
-			output = "OKAY\r\n";
-			len = 6;
-		} else {
-	        output = "ERRO              unrecognized message\r\n";
-	    }
-	}
+	char *output = NULL;
+	int len = 0;
+	input_handler(message->input_v, message->input_s, &output, &len, message);
 
 	if (write(message->client->client_fd, output, len) < 0) {
 		perror("ERROR writing to socket");
@@ -286,12 +273,13 @@ void *message_work_function(void *param) {
 	}
 
 	pthread_mutex_lock(&lock);
-	message->work_threads[message->thread_idx] = 0;
+	message->message_threads[message->thread_idx] = 0;
+	*(message->message_count) -= 1;
 	pthread_mutex_unlock(&lock);
 
 	pthread_exit(NULL);
 
-    return NULL;
+	return NULL;
 }
 
 /** Tokenize the buffer, split string by space \r \n
@@ -311,12 +299,68 @@ char **buffer_reader(char *buffer, int *s) {
     return array;
 }
 
+/** Handle input message
+ */
+void input_handler(char **input_v, int input_s, char **output, int *len, message_t *message) {
+    *output = NULL;
+	*len = TEXT_LEN;
+	char *command = input_v[0];
+    if (!strcmp(command, "PING")) {
+        *output = "PONG\r\n";
+		*len = 6;
+    } else if (!strcmp(command, "PONG")) {
+		*output = "ERRO          reserved server response\r\n";
+	} else if (!strcmp(command, "OKAY")) {
+		*output = "ERRO   not okay to send OKAY to server\r\n";
+	} else if (!strcmp(command, "ERRO")) {
+		*output = "ERRO         should not send to server\r\n";
+	} else if (!strcmp(command, "SOLN")) {
+		if (input_s < 4) {
+			*output = "ERRO               SOLN less arguments\r\n";
+		} else if (is_solution(input_v[1], input_v[2], input_v[3])) {
+			*output = "OKAY\r\n";
+			*len = 6;
+		} else {
+			*output = "ERRO              solution is not okay\r\n";
+		}
+    } else if (!strcmp(command, "WORK")) {
+		if (input_s < 5) {
+			*output = "ERRO               WORK less arguments\r\n";
+		} else {
+			BYTE *solution = proof_of_work(input_v[1], input_v[2], input_v[3], input_v[4]);
+			char *out = (char*)malloc((95 + 2) * sizeof(char));
+			char *soln = (char*)malloc((16 + 1) * sizeof(char));
+			for (int i = 0; i < 8; i++) {
+				sprintf(soln+(2*i), "%02x", solution[i]);
+			}
+			sprintf(out, "SOLN %s %s %s\r\n", input_v[1], input_v[2], soln);
+	        *output = out;
+			*len = 95 + 2;
+		}
+    } else if (!strcmp(command, "ABRT")) {
+		pthread_mutex_lock(&lock);
+		for (int i = 0; i < MAX_PENGDING_JOBS; i++){
+			if (message->message_threads[i] != 0) {
+				pthread_cancel(message->message_threads[i]);
+			}
+			message->message_threads[i] = 0;
+		}
+		*(message->message_count) = 0;
+		pthread_mutex_unlock(&lock);
+
+		*output = "OKAY\r\n";
+		*len = 6;
+	} else {
+        *output = "ERRO              unrecognized message\r\n";
+    }
+    return;
+}
+
 /** Handle SOLN message; return true if is a solution
  */
 bool is_solution(const char *difficulty_, const char *seed_, const char *solution_) {
 	int i = 0;
 
-	// initialize variables
 	uint32_t difficulty = strtoull(difficulty_, NULL, 16);
 	uint32_t alpha = (MASK_ALPHA & difficulty) >> 24;
     uint32_t beta = MASK_BETA & difficulty;
@@ -337,16 +381,13 @@ bool is_solution(const char *difficulty_, const char *seed_, const char *solutio
         temp >>= 8;
     }
 
-	// calculate target
     uint256_exp(clean, base, (8 * (alpha - 3)));
     uint256_mul(target, coefficient, clean);
 
-	// initialize hash
 	SHA256_CTX ctx;
 	BYTE result[SHA256_BLOCK_SIZE];
 	uint256_init(result);
 
-	// generate text
     BYTE text[TEXT_LEN];
 	int idx = 0;
 	char buf[2];
@@ -361,7 +402,6 @@ bool is_solution(const char *difficulty_, const char *seed_, const char *solutio
         text[idx++] = strtoull(buf, NULL, 16);
     }
 
-	// do hash
     uint256_init(clean);
 	sha256_init(&ctx);
 	sha256_update(&ctx, text, TEXT_LEN);
@@ -371,7 +411,6 @@ bool is_solution(const char *difficulty_, const char *seed_, const char *solutio
 	sha256_update(&ctx, clean, SHA256_BLOCK_SIZE);
 	sha256_final(&ctx, result);
 
-	// compare
     if (sha256_compare(result, target) < 0) {
 		return true;
     } else {
@@ -382,11 +421,10 @@ bool is_solution(const char *difficulty_, const char *seed_, const char *solutio
 /** Handle WORK message; return a solution
  */
 BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *start_, const char *worker_count_) {
-	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 	(void) worker_count_;
+
 	int i = 0;
 
-	// initialize variables
 	uint32_t difficulty = strtoull(difficulty_, NULL, 16);
 	BYTE seed[32];
 	uint256_init(seed);
@@ -407,7 +445,6 @@ BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *star
 	uint256_init(target);
 	uint256_init(clean);
 
-	// get coefficient of target
 	base[31] = 0x02;
 	uint32_t temp = beta;
 	for (i = 0; i < 32; i++) {
@@ -415,18 +452,13 @@ BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *star
 		temp >>= 8;
 	}
 
-	// calculate target
 	uint256_exp(clean, base, (8 * (alpha - 3)));
 	uint256_mul(target, coefficient, clean);
 
-	// initialize hash
 	SHA256_CTX ctx;
 	BYTE result[SHA256_BLOCK_SIZE];
 	uint256_init(result);
-
-	// find solution
 	while (true) {
-		// generate text; concatenate seed and nonce
 		BYTE text[TEXT_LEN];
 		int idx = 0;
 		for (i = 0; i < 32; i++) { text[idx++] = seed[i]; }
@@ -440,7 +472,6 @@ BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *star
 		}
 		for (i = 0; i < 8; i++) { text[idx++] = nonce[i]; }
 
-		// do hash
 		uint256_init(clean);
 		sha256_init(&ctx);
 		sha256_update(&ctx, text, TEXT_LEN);
@@ -450,7 +481,6 @@ BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *star
 		sha256_update(&ctx, clean, SHA256_BLOCK_SIZE);
 		sha256_final(&ctx, result);
 
-		// compare
 		if (sha256_compare(result, target) < 0) {
 			return nonce;
 		} else {
@@ -532,8 +562,9 @@ void interrupt_handler(int sig) {
 	(void) sig;
 
 	for (int i = 0; i < MAX_CLIENTS; i++){
-		if (client_threads[i] != 0)
-			pthread_cancel(client_threads[i]);
+		if (clients[i] != 0) {
+			pthread_cancel(clients[i]);
+		}
 	}
 	pthread_cancel(main_thread);
 }
