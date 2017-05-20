@@ -40,6 +40,14 @@ typedef struct {
 	int thread_idx;
 } client_t;
 
+typedef struct message {
+    client_t *client;
+	pthread_t *message_threads;
+	int *message_count;
+	char buffer[256];
+	int thread_idx;
+} message_t;
+
 pthread_t main_thread;
 pthread_t clients[MAX_CLIENTS];
 client_t client_args[MAX_CLIENTS];
@@ -47,9 +55,10 @@ client_t client_args[MAX_CLIENTS];
 int thread_count = 0;
 
 void *main_work_function(void*);
+void *client_work_function(void*);
 void *message_work_function(void*);
 char **buffer_reader(char*, int*);
-void input_handler(char**, int, char**, int*);
+void input_handler(char**, int, char**, int*, message_t*);
 bool is_solution(const char*, const char*, const char*);
 BYTE *proof_of_work(const char*, const char*, const char*, const char*);
 void connection_log(client_t*);

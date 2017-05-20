@@ -70,7 +70,7 @@ int main(int argc, char* argv[]) {
 	arg->server_addr = server_addr;
 
     if (pthread_create(&main_thread, NULL, main_work_function, (void*)arg)) {
-        perror("ERROR to create thread");
+        perror("ERROR to create main thread");
         exit(EXIT_FAILURE);
     }
     if (pthread_join(main_thread, NULL)) {
@@ -129,8 +129,8 @@ void *main_work_function(void *param) {
 
 		connection_log(client);
 
-	    if (pthread_create(&(clients[idx]), NULL, message_work_function, (void*)&(client_args[idx]))) {
-	        perror("ERROR to create thread");
+	    if (pthread_create(&(clients[idx]), NULL, client_work_function, (void*)&(client_args[idx]))) {
+	        perror("ERROR to create client thread");
 	        exit(EXIT_FAILURE);
 	    } else {
 			thread_count++;
@@ -140,10 +140,13 @@ void *main_work_function(void *param) {
     return NULL;
 }
 
-/** Work function for handling a message
+/** Work function for handling a client
  */
-void *message_work_function(void *param) {
+void *client_work_function(void *param) {
 	client_t *client = (client_t*)param;
+
+	pthread_t message_threads[10];
+	int message_count = 0;
 
 	char buffer[256];
 
@@ -156,17 +159,19 @@ void *message_work_function(void *param) {
 		}
 		receive_message_log(client, buffer);
 
-		int input_s = 0;
-		char **input_v = buffer_reader(buffer, &input_s);
-		char *output = NULL;
-		int len = 0;
-		input_handler(input_v, input_s, &output, &len);
+		message_t *message = (message_t*)malloc(sizeof(message_t));
+		message->client = client;
+		message->message_threads = message_threads;
+		message->message_count = &message_count;
+		message->thread_idx = message_count;
+		strcpy(message->buffer, buffer);
 
-		if (write(client->client_fd, output, len) < 0) {
-			perror("ERROR writing to socket");
-			break;
+		if (pthread_create(&(message_threads[message_count]), NULL, message_work_function, (void*)message)) {
+	        perror("ERROR to create message thread");
+	        exit(EXIT_FAILURE);
+	    } else {
+			message_count++;
 		}
-		send_message_log(client, output);
 	}
 
 	close(client->client_fd);
@@ -175,6 +180,30 @@ void *message_work_function(void *param) {
 	clients[client->thread_idx] = 0;
 	thread_count--;
 	pthread_mutex_unlock(&lock);
+
+	pthread_exit(NULL);
+
+	return NULL;
+}
+
+/** Work function for handling a message
+ */
+void *message_work_function(void *param) {
+	message_t *message = (message_t*)param;
+
+	int input_s = 0;
+	char **input_v = buffer_reader(message->buffer, &input_s);
+	char *output = NULL;
+	int len = 0;
+	input_handler(input_v, input_s, &output, &len, message);
+
+	if (write(message->client->client_fd, output, len) < 0) {
+		perror("ERROR writing to socket");
+		return NULL;
+	}
+	send_message_log(message->client, output);
+
+	*(message->message_count) -= 1;
 
 	pthread_exit(NULL);
 
@@ -200,7 +229,7 @@ char **buffer_reader(char *buffer, int *s) {
 
 /** Handle input message
  */
-void input_handler(char **input_v, int input_s, char **output, int *len) {
+void input_handler(char **input_v, int input_s, char **output, int *len, message_t *message) {
     *output = NULL;
 	*len = TEXT_LEN;
 	if (!input_v) {
@@ -241,7 +270,19 @@ void input_handler(char **input_v, int input_s, char **output, int *len) {
 			*len = 95 + 2;
 		}
     } else if (!strcmp(command, "ABRT")) {
-		*output = "ERRO         me not implement this yet\r\n";
+		pthread_mutex_lock(&lock);
+		for (int i = 0; i < 10; i++){
+			if ((message->message_threads[i] != 0) &&
+				(message->message_threads[i] != message->message_threads[message->thread_idx])) {
+				pthread_cancel(message->message_threads[i]);
+			}
+			message->message_threads[i] = 0;
+		}
+		*(message->message_count) = 1;
+		pthread_mutex_unlock(&lock);
+
+		*output = "OKAY\r\n";
+		*len = 6;
 	} else {
         *output = "ERRO              unrecognized message\r\n";
     }
