@@ -1,6 +1,8 @@
-[21-05-2017 03:14:49](127.0.0.1)(socket_id 4) client connected
-[21-05-2017 03:14:56](127.0.0.1)(socket_id 4) server receive a message from client: WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212399 01
-[21-05-2017 03:14:57](127.0.0.1)(socket_id 4) server receive a message from client: WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212399 01
-[21-05-2017 03:14:57](127.0.0.1)(socket_id 4) server receive a message from client: WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212399 01
-[21-05-2017 03:15:01](127.0.0.1)(socket_id 4) server receive a message from client: ABRT
-[21-05-2017 03:15:01](127.0.0.1)(socket_id 4) server send a message to client: OKAY
+[21-05-2017 03:28:13](127.0.0.1)(socket_id 4) client connected
+[21-05-2017 03:28:14](127.0.0.1)(socket_id 4) server receive a message from client: PING
+[21-05-2017 03:28:14](127.0.0.1)(socket_id 4) server send a message to client: PONG
+[21-05-2017 03:28:16](127.0.0.1)(socket_id 4) server receive a message from client: OKAY
+[21-05-2017 03:28:16](127.0.0.1)(socket_id 4) server send a message to client: ERRO   not okay to send OKAY to server
+[21-05-2017 03:28:18](127.0.0.1)(socket_id 5) client connected
+[21-05-2017 03:28:19](127.0.0.1)(socket_id 5) server receive a message from client: PING
+[21-05-2017 03:28:19](127.0.0.1)(socket_id 5) server send a message to client: PONG

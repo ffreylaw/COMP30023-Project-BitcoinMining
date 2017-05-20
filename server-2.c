@@ -113,7 +113,7 @@ void *main_work_function(void *param) {
 
 		int idx = 0;
 		for(int i = 0; i < MAX_CLIENTS; i++){
-			if (clients[i] == 0) {
+			if (client_threads[i] == 0) {
 				idx = i;
 				break;
 			}
@@ -129,7 +129,7 @@ void *main_work_function(void *param) {
 
 		connection_log(client);
 
-	    if (pthread_create(&(clients[idx]), NULL, client_work_function, (void*)&(client_args[idx]))) {
+	    if (pthread_create(&(client_threads[idx]), NULL, client_work_function, (void*)&(client_args[idx]))) {
 	        perror("ERROR to create thread");
 	        exit(EXIT_FAILURE);
 	    } else {
@@ -144,6 +144,9 @@ void *main_work_function(void *param) {
  */
 void *client_work_function(void *param) {
 	client_t *client = (client_t*)param;
+
+	pthread_t work_threads[MAX_PENGDING_JOBS];
+	int work_count = 0;
 
 	char buffer[256];
 
@@ -161,16 +164,32 @@ void *client_work_function(void *param) {
 
 		receive_message_log(client, buffer);
 
-		if (input_handler(buffer, client) < 0) {
-			perror("ERROR writing to socket");
-			break;
+		int idx = 0;
+		for(int i = 0; i < MAX_PENGDING_JOBS; i++) {
+			if (work_threads[i] == 0) {
+				idx = i;
+				break;
+			}
 		}
+
+		message_t *message = (message_t*)malloc(sizeof(message_t));
+		message->client = client;
+		message->work_threads = work_threads;
+		message->work_count = &work_count;
+		message->buffer = (char*)malloc(256 * sizeof(char));
+		memcpy(message->buffer, buffer, 256);
+		message->thread_idx = idx;
+
+		if (pthread_create(&(work_threads[idx]), NULL, message_work_function, (void*)message)) {
+	        perror("ERROR to create thread");
+	        exit(EXIT_FAILURE);
+	    }
 	}
 
 	close(client->client_fd);
 
 	pthread_mutex_lock(&lock);
-	clients[client->thread_idx] = 0;
+	client_threads[client->thread_idx] = 0;
 	client_count--;
 	pthread_mutex_unlock(&lock);
 
@@ -181,9 +200,10 @@ void *client_work_function(void *param) {
 
 /** Handle input message
  */
-int input_handler(char *buffer, client_t *client) {
+void *message_work_function(void *param) {
+	message_t *message = (message_t*)param;
 	int n = 0;
-	char **input = buffer_reader(buffer, &n);
+	char **input = buffer_reader(message->buffer, &n);
     char *output = NULL;
 	int len = TEXT_LEN;
 	if (!input) {
@@ -209,6 +229,18 @@ int input_handler(char *buffer, client_t *client) {
 				output = "ERRO              solution is not okay\r\n";
 			}
 	    } else if (!strcmp(command, "WORK")) {
+			if (*(message->work_count) >= MAX_PENGDING_JOBS) {
+				if (write(message->client->client_fd, "Pending job limit exceeded\n", 27) < 0) {
+					perror("ERROR writing to socket");
+					exit(EXIT_FAILURE);
+				}
+				return NULL;
+			}
+
+			pthread_mutex_lock(&lock);
+			*(message->work_count) += 1;
+			pthread_mutex_unlock(&lock);
+
 			if (n < 5) {
 				output = "ERRO               WORK less arguments\r\n";
 			} else {
@@ -222,14 +254,43 @@ int input_handler(char *buffer, client_t *client) {
 		        output = out;
 				len = 95 + 2;
 			}
+
+			pthread_mutex_lock(&lock);
+			*(message->work_count) -= 1;
+			pthread_mutex_unlock(&lock);
+
 	    } else if (!strcmp(command, "ABRT")) {
-			output = "ERRO         me not implement this yet\r\n";
+			pthread_mutex_lock(&lock);
+			for (int i = 0; i < MAX_PENGDING_JOBS; i++){
+				if ((message->work_threads[i] != 0) &&
+					(message->work_threads[i] != message->work_threads[message->thread_idx])) {
+					pthread_cancel(message->work_threads[i]);
+				}
+				message->work_threads[i] = 0;
+			}
+			*(message->work_count) = 0;
+			pthread_mutex_unlock(&lock);
+
+			output = "OKAY\r\n";
+			len = 6;
 		} else {
 	        output = "ERRO              unrecognized message\r\n";
 	    }
 	}
-	send_message_log(client, output);
-    return write(client->client_fd, output, len);
+
+	if (write(message->client->client_fd, output, len) < 0) {
+		perror("ERROR writing to socket");
+	} else {
+		send_message_log(message->client, output);
+	}
+
+	pthread_mutex_lock(&lock);
+	message->work_threads[message->thread_idx] = 0;
+	pthread_mutex_unlock(&lock);
+
+	pthread_exit(NULL);
+
+    return NULL;
 }
 
 /** Tokenize the buffer, split string by space \r \n
@@ -254,6 +315,7 @@ char **buffer_reader(char *buffer, int *s) {
 bool is_solution(const char *difficulty_, const char *seed_, const char *solution_) {
 	int i = 0;
 
+	// initialize variables
 	uint32_t difficulty = strtoull(difficulty_, NULL, 16);
 	uint32_t alpha = (MASK_ALPHA & difficulty) >> 24;
     uint32_t beta = MASK_BETA & difficulty;
@@ -274,13 +336,16 @@ bool is_solution(const char *difficulty_, const char *seed_, const char *solutio
         temp >>= 8;
     }
 
+	// calculate target
     uint256_exp(clean, base, (8 * (alpha - 3)));
     uint256_mul(target, coefficient, clean);
 
+	// initialize hash
 	SHA256_CTX ctx;
 	BYTE result[SHA256_BLOCK_SIZE];
 	uint256_init(result);
 
+	// generate text
     BYTE text[TEXT_LEN];
 	int idx = 0;
 	char buf[2];
@@ -295,6 +360,7 @@ bool is_solution(const char *difficulty_, const char *seed_, const char *solutio
         text[idx++] = strtoull(buf, NULL, 16);
     }
 
+	// do hash
     uint256_init(clean);
 	sha256_init(&ctx);
 	sha256_update(&ctx, text, TEXT_LEN);
@@ -304,6 +370,7 @@ bool is_solution(const char *difficulty_, const char *seed_, const char *solutio
 	sha256_update(&ctx, clean, SHA256_BLOCK_SIZE);
 	sha256_final(&ctx, result);
 
+	// compare
     if (sha256_compare(result, target) < 0) {
 		return true;
     } else {
@@ -314,10 +381,11 @@ bool is_solution(const char *difficulty_, const char *seed_, const char *solutio
 /** Handle WORK message; return a solution
  */
 BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *start_, const char *worker_count_) {
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 	(void) worker_count_;
-
 	int i = 0;
 
+	// initialize variables
 	uint32_t difficulty = strtoull(difficulty_, NULL, 16);
 	BYTE seed[32];
 	uint256_init(seed);
@@ -338,6 +406,7 @@ BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *star
 	uint256_init(target);
 	uint256_init(clean);
 
+	// get coefficient of target
 	base[31] = 0x02;
 	uint32_t temp = beta;
 	for (i = 0; i < 32; i++) {
@@ -345,13 +414,18 @@ BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *star
 		temp >>= 8;
 	}
 
+	// calculate target
 	uint256_exp(clean, base, (8 * (alpha - 3)));
 	uint256_mul(target, coefficient, clean);
 
+	// initialize hash
 	SHA256_CTX ctx;
 	BYTE result[SHA256_BLOCK_SIZE];
 	uint256_init(result);
+
+	// find solution
 	while (true) {
+		// generate text; concatenate seed and nonce
 		BYTE text[TEXT_LEN];
 		int idx = 0;
 		for (i = 0; i < 32; i++) { text[idx++] = seed[i]; }
@@ -365,6 +439,7 @@ BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *star
 		}
 		for (i = 0; i < 8; i++) { text[idx++] = nonce[i]; }
 
+		// do hash
 		uint256_init(clean);
 		sha256_init(&ctx);
 		sha256_update(&ctx, text, TEXT_LEN);
@@ -374,6 +449,7 @@ BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *star
 		sha256_update(&ctx, clean, SHA256_BLOCK_SIZE);
 		sha256_final(&ctx, result);
 
+		// compare
 		if (sha256_compare(result, target) < 0) {
 			return nonce;
 		} else {
@@ -455,8 +531,8 @@ void interrupt_handler(int sig) {
 	(void) sig;
 
 	for (int i = 0; i < MAX_CLIENTS; i++){
-		if (clients[i] != 0)
-			pthread_cancel(clients[i]);
+		if (client_threads[i] != 0)
+			pthread_cancel(client_threads[i]);
 	}
 	pthread_cancel(main_thread);
 }
