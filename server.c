@@ -102,8 +102,8 @@ void *main_work_function(void *param) {
     		exit(EXIT_FAILURE);
     	}
 
-		if (thread_count >= MAX_CLIENTS) {
-			if (write(client_fd, "Thread limit exceeded\n", 22) < 0) {
+		if (client_count >= MAX_CLIENTS) {
+			if (write(client_fd, "Client limit exceeded\n", 22) < 0) {
 				perror("ERROR writing to socket");
 				exit(EXIT_FAILURE);
 			}
@@ -133,7 +133,7 @@ void *main_work_function(void *param) {
 	        perror("ERROR to create client thread");
 	        exit(EXIT_FAILURE);
 	    } else {
-			thread_count++;
+			client_count++;
 		}
 	}
 
@@ -157,28 +157,51 @@ void *client_work_function(void *param) {
 			perror("ERROR reading from socket");
 			break;
 		}
+
+		if (message_count >= 10) {
+			if (write(client->client_fd, "Pending job limit exceeded\n", 27) < 0) {
+				perror("ERROR writing to socket");
+				exit(EXIT_FAILURE);
+			}
+			continue;
+		}
+
 		receive_message_log(client, buffer);
+
+		int idx = 0;
+		for(int i = 0; i < MAX_PENGDING_JOBS; i++){
+			if (message_threads[i] == 0) {
+				idx = i;
+				break;
+			}
+		}
 
 		message_t *message = (message_t*)malloc(sizeof(message_t));
 		message->client = client;
 		message->message_threads = message_threads;
 		message->message_count = &message_count;
-		message->thread_idx = message_count;
+		message->thread_idx = idx;
 		strcpy(message->buffer, buffer);
 
-		if (pthread_create(&(message_threads[message_count]), NULL, message_work_function, (void*)message)) {
+		if (pthread_create(&(message_threads[idx]), NULL, message_work_function, (void*)message)) {
 	        perror("ERROR to create message thread");
 	        exit(EXIT_FAILURE);
 	    } else {
 			message_count++;
 		}
+
+		// for (int i = 0; i < MAX_PENGDING_JOBS; i++) {
+		// 	printf("%d ", message_threads[i]);
+		// }
+		// printf("\n%d\n", message_count);
+
 	}
 
 	close(client->client_fd);
 
 	pthread_mutex_lock(&lock);
 	clients[client->thread_idx] = 0;
-	thread_count--;
+	client_count--;
 	pthread_mutex_unlock(&lock);
 
 	pthread_exit(NULL);
@@ -203,7 +226,10 @@ void *message_work_function(void *param) {
 	}
 	send_message_log(message->client, output);
 
+	pthread_mutex_lock(&lock);
+	message->message_threads[message->thread_idx] = 0;
 	*(message->message_count) -= 1;
+	pthread_mutex_unlock(&lock);
 
 	pthread_exit(NULL);
 
@@ -271,7 +297,7 @@ void input_handler(char **input_v, int input_s, char **output, int *len, message
 		}
     } else if (!strcmp(command, "ABRT")) {
 		pthread_mutex_lock(&lock);
-		for (int i = 0; i < 10; i++){
+		for (int i = 0; i < MAX_PENGDING_JOBS; i++){
 			if ((message->message_threads[i] != 0) &&
 				(message->message_threads[i] != message->message_threads[message->thread_idx])) {
 				pthread_cancel(message->message_threads[i]);
