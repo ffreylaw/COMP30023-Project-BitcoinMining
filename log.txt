@@ -1,13 +1,3 @@
-[21-05-2017 15:00:38](0.0.0.0) client(127.0.0.1)(socket_id 4) connected
-[21-05-2017 15:00:39](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): PING
-[21-05-2017 15:00:39](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): PONG
-[21-05-2017 15:00:43](0.0.0.0) client(127.0.0.1)(socket_id 4) disconnected
-[21-05-2017 15:00:52](0.0.0.0) client(127.0.0.1)(socket_id 4) connected
-[21-05-2017 15:00:55](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212399 01
-[21-05-2017 15:00:56](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212399 01
-[21-05-2017 15:00:57](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212399 01
-[21-05-2017 15:01:02](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): PING
-[21-05-2017 15:01:02](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): PONG
-[21-05-2017 15:01:03](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): ABRT
-[21-05-2017 15:01:03](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): OKAY
-[21-05-2017 15:01:05](0.0.0.0) client(127.0.0.1)(socket_id 4) disconnected
+[21-05-2017 15:53:29](127.0.0.1)(socket_id 4) client connected
+[21-05-2017 15:53:39](127.0.0.1)(socket_id 4) server receive a message from client: WORK 1fffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212399 01
+[21-05-2017 15:53:39](127.0.0.1)(socket_id 4) server send a message to client: SOLN 1fffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212605
