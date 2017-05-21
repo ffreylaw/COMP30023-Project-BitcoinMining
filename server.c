@@ -127,7 +127,7 @@ void *main_work_function(void *param) {
 
 		client_args[idx] = *client;
 
-		connection_log(client);
+		connect_log(client);
 
 	    if (pthread_create(&(clients[idx]), NULL, client_work_function, (void*)&(client_args[idx]))) {
 	        perror("ERROR to create thread");
@@ -152,17 +152,20 @@ void *client_work_function(void *param) {
 
 		if (read(client->client_fd, buffer, 255) < 0) {
 			perror("ERROR reading from socket");
+			disconnect_log(client);
 			break;
 		}
 
 		if (buffer[0] == '\0') {
+			disconnect_log(client);
 			break;
 		}
 
 		receive_message_log(client, buffer);
 
-		if (input_handler(buffer, client) < 0) {
+		if (handle_message(buffer, client) < 0) {
 			perror("ERROR writing to socket");
+			disconnect_log(client);
 			break;
 		}
 	}
@@ -181,9 +184,9 @@ void *client_work_function(void *param) {
 
 /** Handle input message
  */
-int input_handler(char *buffer, client_t *client) {
+int handle_message(char *buffer, client_t *client) {
 	int n = 0;
-	char **input = buffer_reader(buffer, &n);
+	char **input = split(buffer, &n);
     char *output = NULL;
 	int len = TEXT_LEN;
 	if (!input) {
@@ -232,9 +235,9 @@ int input_handler(char *buffer, client_t *client) {
     return write(client->client_fd, output, len);
 }
 
-/** Tokenize the buffer, split string by space \r \n
+/** Split string by space \r \n
  */
-char **buffer_reader(char *buffer, int *s) {
+char **split(char *buffer, int *s) {
     char *ptr = strtok(buffer, " \r\n");
 	if (!ptr) {
 		return NULL;
@@ -252,8 +255,10 @@ char **buffer_reader(char *buffer, int *s) {
 /** Handle SOLN message; return true if is a solution
  */
 bool is_solution(const char *difficulty_, const char *seed_, const char *solution_) {
+	// counter variable
 	int i = 0;
 
+	// initialize variables
 	uint32_t difficulty = strtoull(difficulty_, NULL, 16);
 	uint32_t alpha = (MASK_ALPHA & difficulty) >> 24;
     uint32_t beta = MASK_BETA & difficulty;
@@ -274,13 +279,16 @@ bool is_solution(const char *difficulty_, const char *seed_, const char *solutio
         temp >>= 8;
     }
 
+	// calculate target
     uint256_exp(clean, base, (8 * (alpha - 3)));
     uint256_mul(target, coefficient, clean);
 
+	// initialize hash
 	SHA256_CTX ctx;
 	BYTE result[SHA256_BLOCK_SIZE];
 	uint256_init(result);
 
+	// generate text
     BYTE text[TEXT_LEN];
 	int idx = 0;
 	char buf[2];
@@ -295,6 +303,7 @@ bool is_solution(const char *difficulty_, const char *seed_, const char *solutio
         text[idx++] = strtoull(buf, NULL, 16);
     }
 
+	// do hash
     uint256_init(clean);
 	sha256_init(&ctx);
 	sha256_update(&ctx, text, TEXT_LEN);
@@ -304,6 +313,7 @@ bool is_solution(const char *difficulty_, const char *seed_, const char *solutio
 	sha256_update(&ctx, clean, SHA256_BLOCK_SIZE);
 	sha256_final(&ctx, result);
 
+	// compare
     if (sha256_compare(result, target) < 0) {
 		return true;
     } else {
@@ -316,8 +326,10 @@ bool is_solution(const char *difficulty_, const char *seed_, const char *solutio
 BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *start_, const char *worker_count_) {
 	(void) worker_count_;
 
+	// counter variable
 	int i = 0;
 
+	// initialize variables
 	uint32_t difficulty = strtoull(difficulty_, NULL, 16);
 	BYTE seed[32];
 	uint256_init(seed);
@@ -338,6 +350,7 @@ BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *star
 	uint256_init(target);
 	uint256_init(clean);
 
+	// get coefficient of target
 	base[31] = 0x02;
 	uint32_t temp = beta;
 	for (i = 0; i < 32; i++) {
@@ -345,13 +358,18 @@ BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *star
 		temp >>= 8;
 	}
 
+	// calculate target
 	uint256_exp(clean, base, (8 * (alpha - 3)));
 	uint256_mul(target, coefficient, clean);
 
+	// initialize hash
 	SHA256_CTX ctx;
 	BYTE result[SHA256_BLOCK_SIZE];
 	uint256_init(result);
+
+	// find solution
 	while (true) {
+		// generate text; concatenate seed and nonce
 		BYTE text[TEXT_LEN];
 		int idx = 0;
 		for (i = 0; i < 32; i++) { text[idx++] = seed[i]; }
@@ -365,6 +383,7 @@ BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *star
 		}
 		for (i = 0; i < 8; i++) { text[idx++] = nonce[i]; }
 
+		// do hash
 		uint256_init(clean);
 		sha256_init(&ctx);
 		sha256_update(&ctx, text, TEXT_LEN);
@@ -374,6 +393,7 @@ BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *star
 		sha256_update(&ctx, clean, SHA256_BLOCK_SIZE);
 		sha256_final(&ctx, result);
 
+		// compare
 		if (sha256_compare(result, target) < 0) {
 			return nonce;
 		} else {
@@ -385,7 +405,7 @@ BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *star
 
 /** Log for connection
  */
-void connection_log(client_t *client) {
+void connect_log(client_t *client) {
 	pthread_mutex_lock(&lock);
 
 	fp = fopen("log.txt", "a");
@@ -394,11 +414,37 @@ void connection_log(client_t *client) {
 	time_t now = time(0);
 	strftime(time_buffer, BUFFER_SIZE, "%d-%m-%Y %H:%M:%S", localtime(&now));
 
-	char ip4[INET_ADDRSTRLEN];
-	inet_ntop(AF_INET, &(client->client_addr.sin_addr), ip4, INET_ADDRSTRLEN);
+	char server_ip4[INET_ADDRSTRLEN];
+	inet_ntop(AF_INET, &(client->server_addr.sin_addr), server_ip4, INET_ADDRSTRLEN);
+	char client_ip4[INET_ADDRSTRLEN];
+	inet_ntop(AF_INET, &(client->client_addr.sin_addr), client_ip4, INET_ADDRSTRLEN);
 
-	fprintf(fp, "[%s](%s)", time_buffer, ip4);
-	fprintf(fp, "(socket_id %d) client connected\n", client->client_fd);
+	fprintf(fp, "[%s](%s) ", time_buffer, server_ip4);
+	fprintf(fp, "client(%s)(socket_id %d) connected\n", client_ip4, client->client_fd);
+
+	fclose(fp);
+
+	pthread_mutex_unlock(&lock);
+}
+
+/** Log for disconnection
+ */
+void disconnect_log(client_t *client) {
+	pthread_mutex_lock(&lock);
+
+	fp = fopen("log.txt", "a");
+
+	char time_buffer[BUFFER_SIZE];
+	time_t now = time(0);
+	strftime(time_buffer, BUFFER_SIZE, "%d-%m-%Y %H:%M:%S", localtime(&now));
+
+	char server_ip4[INET_ADDRSTRLEN];
+	inet_ntop(AF_INET, &(client->server_addr.sin_addr), server_ip4, INET_ADDRSTRLEN);
+	char client_ip4[INET_ADDRSTRLEN];
+	inet_ntop(AF_INET, &(client->client_addr.sin_addr), client_ip4, INET_ADDRSTRLEN);
+
+	fprintf(fp, "[%s](%s) ", time_buffer, server_ip4);
+	fprintf(fp, "client(%s)(socket_id %d) disconnected\n", client_ip4, client->client_fd);
 
 	fclose(fp);
 
@@ -416,11 +462,13 @@ void receive_message_log(client_t *client, char *message) {
 	time_t now = time(0);
 	strftime(time_buffer, BUFFER_SIZE, "%d-%m-%Y %H:%M:%S", localtime(&now));
 
-	char ip4[INET_ADDRSTRLEN];
-	inet_ntop(AF_INET, &(client->client_addr.sin_addr), ip4, INET_ADDRSTRLEN);
+	char server_ip4[INET_ADDRSTRLEN];
+	inet_ntop(AF_INET, &(client->server_addr.sin_addr), server_ip4, INET_ADDRSTRLEN);
+	char client_ip4[INET_ADDRSTRLEN];
+	inet_ntop(AF_INET, &(client->client_addr.sin_addr), client_ip4, INET_ADDRSTRLEN);
 
-	fprintf(fp, "[%s](%s)", time_buffer, ip4);
-	fprintf(fp, "(socket_id %d) server receive a message from client: %s", client->client_fd, message);
+	fprintf(fp, "[%s](%s) ", time_buffer, server_ip4);
+	fprintf(fp, "server receives a message from client(%s)(socket_id %d): %s", client_ip4, client->client_fd, message);
 
 	fclose(fp);
 
@@ -438,11 +486,13 @@ void send_message_log(client_t *client, char *message) {
 	time_t now = time(0);
 	strftime(time_buffer, BUFFER_SIZE, "%d-%m-%Y %H:%M:%S", localtime(&now));
 
-	char ip4[INET_ADDRSTRLEN];
-	inet_ntop(AF_INET, &(client->client_addr.sin_addr), ip4, INET_ADDRSTRLEN);
+	char server_ip4[INET_ADDRSTRLEN];
+	inet_ntop(AF_INET, &(client->server_addr.sin_addr), server_ip4, INET_ADDRSTRLEN);
+	char client_ip4[INET_ADDRSTRLEN];
+	inet_ntop(AF_INET, &(client->client_addr.sin_addr), client_ip4, INET_ADDRSTRLEN);
 
-	fprintf(fp, "[%s](%s)", time_buffer, ip4);
-	fprintf(fp, "(socket_id %d) server send a message to client: %s", client->client_fd, message);
+	fprintf(fp, "[%s](%s) ", time_buffer, server_ip4);
+	fprintf(fp, "server sends a message to client(%s)(socket_id %d): %s", client_ip4, client->client_fd, message);
 
 	fclose(fp);
 

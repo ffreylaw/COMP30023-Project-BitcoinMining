@@ -47,11 +47,12 @@ int client_count = 0;
 
 void *main_work_function(void*);
 void *client_work_function(void*);
-int input_handler(char*, client_t*);
-char **buffer_reader(char*, int*);
+int handle_message(char*, client_t*);
+char **split(char*, int*);
 bool is_solution(const char*, const char*, const char*);
 BYTE *proof_of_work(const char*, const char*, const char*, const char*);
-void connection_log(client_t*);
+void connect_log(client_t*);
+void disconnect_log(client_t*);
 void receive_message_log(client_t*, char*);
 void send_message_log(client_t*, char*);
 void interrupt_handler(int);

@@ -127,7 +127,7 @@ void *main_work_function(void *param) {
 
 		client_args[idx] = *client;
 
-		connection_log(client);
+		connect_log(client);
 
 	    if (pthread_create(&(client_threads[idx]), NULL, client_work_function, (void*)&(client_args[idx]))) {
 	        perror("ERROR to create thread");
@@ -155,10 +155,12 @@ void *client_work_function(void *param) {
 
 		if (read(client->client_fd, buffer, 255) < 0) {
 			perror("ERROR reading from socket");
+			disconnect_log(client);
 			break;
 		}
 
 		if (buffer[0] == '\0') {
+			disconnect_log(client);
 			break;
 		}
 
@@ -381,7 +383,6 @@ bool is_solution(const char *difficulty_, const char *seed_, const char *solutio
 /** Handle WORK message; return a solution
  */
 BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *start_, const char *worker_count_) {
-	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 	(void) worker_count_;
 	int i = 0;
 
@@ -461,7 +462,7 @@ BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *star
 
 /** Log for connection
  */
-void connection_log(client_t *client) {
+void connect_log(client_t *client) {
 	pthread_mutex_lock(&lock);
 
 	fp = fopen("log.txt", "a");
@@ -470,11 +471,37 @@ void connection_log(client_t *client) {
 	time_t now = time(0);
 	strftime(time_buffer, BUFFER_SIZE, "%d-%m-%Y %H:%M:%S", localtime(&now));
 
-	char ip4[INET_ADDRSTRLEN];
-	inet_ntop(AF_INET, &(client->client_addr.sin_addr), ip4, INET_ADDRSTRLEN);
+	char server_ip4[INET_ADDRSTRLEN];
+	inet_ntop(AF_INET, &(client->server_addr.sin_addr), server_ip4, INET_ADDRSTRLEN);
+	char client_ip4[INET_ADDRSTRLEN];
+	inet_ntop(AF_INET, &(client->client_addr.sin_addr), client_ip4, INET_ADDRSTRLEN);
 
-	fprintf(fp, "[%s](%s)", time_buffer, ip4);
-	fprintf(fp, "(socket_id %d) client connected\n", client->client_fd);
+	fprintf(fp, "[%s](%s) ", time_buffer, server_ip4);
+	fprintf(fp, "client(%s)(socket_id %d) connected\n", client_ip4, client->client_fd);
+
+	fclose(fp);
+
+	pthread_mutex_unlock(&lock);
+}
+
+/** Log for disconnection
+ */
+void disconnect_log(client_t *client) {
+	pthread_mutex_lock(&lock);
+
+	fp = fopen("log.txt", "a");
+
+	char time_buffer[BUFFER_SIZE];
+	time_t now = time(0);
+	strftime(time_buffer, BUFFER_SIZE, "%d-%m-%Y %H:%M:%S", localtime(&now));
+
+	char server_ip4[INET_ADDRSTRLEN];
+	inet_ntop(AF_INET, &(client->server_addr.sin_addr), server_ip4, INET_ADDRSTRLEN);
+	char client_ip4[INET_ADDRSTRLEN];
+	inet_ntop(AF_INET, &(client->client_addr.sin_addr), client_ip4, INET_ADDRSTRLEN);
+
+	fprintf(fp, "[%s](%s) ", time_buffer, server_ip4);
+	fprintf(fp, "client(%s)(socket_id %d) disconnected\n", client_ip4, client->client_fd);
 
 	fclose(fp);
 
@@ -492,11 +519,13 @@ void receive_message_log(client_t *client, char *message) {
 	time_t now = time(0);
 	strftime(time_buffer, BUFFER_SIZE, "%d-%m-%Y %H:%M:%S", localtime(&now));
 
-	char ip4[INET_ADDRSTRLEN];
-	inet_ntop(AF_INET, &(client->client_addr.sin_addr), ip4, INET_ADDRSTRLEN);
+	char server_ip4[INET_ADDRSTRLEN];
+	inet_ntop(AF_INET, &(client->server_addr.sin_addr), server_ip4, INET_ADDRSTRLEN);
+	char client_ip4[INET_ADDRSTRLEN];
+	inet_ntop(AF_INET, &(client->client_addr.sin_addr), client_ip4, INET_ADDRSTRLEN);
 
-	fprintf(fp, "[%s](%s)", time_buffer, ip4);
-	fprintf(fp, "(socket_id %d) server receive a message from client: %s", client->client_fd, message);
+	fprintf(fp, "[%s](%s) ", time_buffer, server_ip4);
+	fprintf(fp, "server receives a message from client(%s)(socket_id %d): %s", client_ip4, client->client_fd, message);
 
 	fclose(fp);
 
@@ -514,11 +543,13 @@ void send_message_log(client_t *client, char *message) {
 	time_t now = time(0);
 	strftime(time_buffer, BUFFER_SIZE, "%d-%m-%Y %H:%M:%S", localtime(&now));
 
-	char ip4[INET_ADDRSTRLEN];
-	inet_ntop(AF_INET, &(client->client_addr.sin_addr), ip4, INET_ADDRSTRLEN);
+	char server_ip4[INET_ADDRSTRLEN];
+	inet_ntop(AF_INET, &(client->server_addr.sin_addr), server_ip4, INET_ADDRSTRLEN);
+	char client_ip4[INET_ADDRSTRLEN];
+	inet_ntop(AF_INET, &(client->client_addr.sin_addr), client_ip4, INET_ADDRSTRLEN);
 
-	fprintf(fp, "[%s](%s)", time_buffer, ip4);
-	fprintf(fp, "(socket_id %d) server send a message to client: %s", client->client_fd, message);
+	fprintf(fp, "[%s](%s) ", time_buffer, server_ip4);
+	fprintf(fp, "server sends a message to client(%s)(socket_id %d): %s", client_ip4, client->client_fd, message);
 
 	fclose(fp);
 
