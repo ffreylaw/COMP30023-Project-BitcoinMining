@@ -65,11 +65,11 @@ int main(int argc, char* argv[]) {
 	/* Accept a connection - block until a connection is ready to
 	 be accepted. Get back a new file descriptor to communicate on. */
 
-	arg_t *arg = (arg_t*)malloc(sizeof(arg_t));
-    arg->socket_fd = socket_fd;
-	arg->server_addr = server_addr;
+	server_t *server = (server_t*)malloc(sizeof(server_t));
+    server->socket_fd = socket_fd;
+	server->server_addr = server_addr;
 
-    if (pthread_create(&main_thread, NULL, main_work_function, (void*)arg)) {
+    if (pthread_create(&main_thread, NULL, main_work_function, (void*)server)) {
         perror("ERROR to create thread");
         exit(EXIT_FAILURE);
     }
@@ -84,9 +84,9 @@ int main(int argc, char* argv[]) {
 /** Main work function for client thread
  */
 void *main_work_function(void *param) {
-	arg_t *arg = (arg_t*)param;
-	int socket_fd = arg->socket_fd;
-	struct sockaddr_in server_addr = arg->server_addr;
+	server_t *server = (server_t*)param;
+	int socket_fd = server->socket_fd;
+	struct sockaddr_in server_addr = server->server_addr;
 	struct sockaddr_in client_addr;
 	socklen_t client_len = sizeof(client_addr);
 
@@ -113,7 +113,7 @@ void *main_work_function(void *param) {
 
 		int idx = 0;
 		for(int i = 0; i < MAX_CLIENTS; i++){
-			if (clients[i] == 0) {
+			if (client_threads[i] == 0) {
 				idx = i;
 				break;
 			}
@@ -124,12 +124,14 @@ void *main_work_function(void *param) {
 		client->server_addr = server_addr;
 		client->client_addr = client_addr;
 		client->thread_idx = idx;
+		bool disconnect = false;
+		client->disconnect = &disconnect;
 
 		client_args[idx] = *client;
 
 		connect_log(client);
 
-	    if (pthread_create(&(clients[idx]), NULL, client_work_function, (void*)&(client_args[idx]))) {
+	    if (pthread_create(&(client_threads[idx]), NULL, client_work_function, (void*)&(client_args[idx]))) {
 	        perror("ERROR to create thread");
 	        exit(EXIT_FAILURE);
 	    } else {
@@ -145,36 +147,68 @@ void *main_work_function(void *param) {
 void *client_work_function(void *param) {
 	client_t *client = (client_t*)param;
 
+	pthread_t work_thread;
+	List work_queue = NULL;
+
+	work_arg_t *work_arg = (work_arg_t*)malloc(sizeof(work_arg_t));
+	work_arg->client = client;
+	work_arg->work_queue = &work_queue;
+
+	if (pthread_create(&work_thread, NULL, handle_work, (void*)work_arg)) {
+		perror("ERROR to create thread");
+		exit(EXIT_FAILURE);
+	}
+
 	char buffer[256];
 
 	while (true) {
+		// List node = work_queue;
+		// while (node != NULL) {
+		// 	printf("haha ");
+		// 	node = node->next;
+		// }
+		// printf("\n");
+
+		if (*(client->disconnect)) {
+			disconnect_log(client);
+			break;
+		}
+
 		bzero(buffer, 256);
 
 		if (read(client->client_fd, buffer, 255) < 0) {
 			perror("ERROR reading from socket");
-			disconnect_log(client);
-			break;
+			*(client->disconnect) = true;
+			continue;
 		}
 
 		if (buffer[0] == '\0') {
-			disconnect_log(client);
-			break;
+			if (write(client->client_fd, "ERRO                     invalid input\r\n", 40) < 0) {
+				perror("ERROR writing to socket");
+				*(client->disconnect) = true;
+				continue;
+			}
+			continue;
 		}
 
 		receive_message_log(client, buffer);
 
-		if (handle_message(buffer, client) < 0) {
-			perror("ERROR writing to socket");
-			disconnect_log(client);
-			break;
-		}
+		message_t *message = (message_t*)malloc(sizeof(message_t));
+		message->client = client;
+		message->work_queue = &work_queue;
+		message->buffer = (char*)malloc(256 * sizeof(char));
+		memcpy(message->buffer, buffer, 256);
+
+		handle_message(message);
 	}
 
 	close(client->client_fd);
 
 	pthread_mutex_lock(&lock);
-	clients[client->thread_idx] = 0;
+
+	client_threads[client->thread_idx] = 0;
 	client_count--;
+
 	pthread_mutex_unlock(&lock);
 
 	pthread_exit(NULL);
@@ -182,11 +216,53 @@ void *client_work_function(void *param) {
 	return NULL;
 }
 
+void *handle_work(void *param) {
+	work_arg_t *work_arg = (work_arg_t*)param;
+	while (true) {
+		List *queue = (List*)work_arg->work_queue;
+		List node = *queue;
+		if (node != NULL) {
+			work_t *data = node->data;
+
+			BYTE *solution = proof_of_work(data->difficulty,
+										   data->seed,
+										   data->start,
+									   	   data->worker_count);
+			char *out = (char*)malloc((95 + 2) * sizeof(char));
+			char *soln = (char*)malloc((16 + 1) * sizeof(char));
+			for (int i = 0; i < 8; i++) {
+				sprintf(soln+(2*i), "%02x", solution[i]);
+			}
+			sprintf(out, "SOLN %s %s %s\r\n", data->difficulty, data->seed, soln);
+
+			char *output = out;
+			int len = 95 + 2;
+
+			if (write(data->client->client_fd, output, len) < 0) {
+				perror("ERROR writing to socket");
+				*(work_arg->client->disconnect) = true;
+				break;
+			} else {
+				send_message_log(data->client, output);
+			}
+
+			pop(queue);
+		}
+
+		if (*(work_arg->client->disconnect)) {
+			break;
+		}
+	}
+
+	pthread_exit(NULL);
+}
+
 /** Handle input message
  */
-int handle_message(char *buffer, client_t *client) {
+void *handle_message(void *param) {
+	message_t *message = (message_t*)param;
 	int n = 0;
-	char **input = split(buffer, &n);
+	char **input = buffer_reader(message->buffer, &n);
     char *output = NULL;
 	int len = TEXT_LEN;
 	if (!input) {
@@ -215,29 +291,64 @@ int handle_message(char *buffer, client_t *client) {
 			if (n < 5) {
 				output = "ERRO               WORK less arguments\r\n";
 			} else {
-				BYTE *solution = proof_of_work(input[1], input[2], input[3], input[4]);
-				char *out = (char*)malloc((95 + 2) * sizeof(char));
-				char *soln = (char*)malloc((16 + 1) * sizeof(char));
-				for (int i = 0; i < 8; i++) {
-					sprintf(soln+(2*i), "%02x", solution[i]);
+				int n = list_len(*(message->work_queue));
+				if (n >= MAX_PENGDING_JOBS + 1) {
+					if (write(message->client->client_fd, "Pending job limit exceeded\n", 27) < 0) {
+						perror("ERROR writing to socket");
+						exit(EXIT_FAILURE);
+					}
+					return NULL;
 				}
-				sprintf(out, "SOLN %s %s %s\r\n", input[1], input[2], soln);
-		        output = out;
-				len = 95 + 2;
+
+				pthread_mutex_lock(&lock);
+
+				work_t *work = (work_t*)malloc(sizeof(work_t));
+				work->client = message->client;
+				work->difficulty = input[1];
+				work->seed = input[2];
+				work->start = input[3];
+				work->worker_count = input[4];
+
+				insert(work, message->work_queue);
+
+				pthread_mutex_unlock(&lock);
+
+				return NULL;
 			}
 	    } else if (!strcmp(command, "ABRT")) {
-			output = "ERRO         me not implement this yet\r\n";
+			pthread_mutex_lock(&lock);
+
+			List *queue = message->work_queue;
+			(*queue)->next = NULL;
+			List node = (*queue)->next;
+			while (node != NULL) {
+		        List ptr = node;
+		        node = node->next;
+		        free(ptr);
+			}
+
+			pthread_mutex_unlock(&lock);
+
+			output = "OKAY\r\n";
+			len = 6;
 		} else {
 	        output = "ERRO              unrecognized message\r\n";
 	    }
 	}
-	send_message_log(client, output);
-    return write(client->client_fd, output, len);
+
+	if (write(message->client->client_fd, output, len) < 0) {
+		perror("ERROR writing to socket");
+		*(message->client->disconnect) = true;
+	} else {
+		send_message_log(message->client, output);
+	}
+
+    return NULL;
 }
 
-/** Split string by space \r \n
+/** Tokenize the buffer, split string by space \r \n
  */
-char **split(char *buffer, int *s) {
+char **buffer_reader(char *buffer, int *s) {
     char *ptr = strtok(buffer, " \r\n");
 	if (!ptr) {
 		return NULL;
@@ -255,7 +366,6 @@ char **split(char *buffer, int *s) {
 /** Handle SOLN message; return true if is a solution
  */
 bool is_solution(const char *difficulty_, const char *seed_, const char *solution_) {
-	// counter variable
 	int i = 0;
 
 	// initialize variables
@@ -325,8 +435,6 @@ bool is_solution(const char *difficulty_, const char *seed_, const char *solutio
  */
 BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *start_, const char *worker_count_) {
 	(void) worker_count_;
-
-	// counter variable
 	int i = 0;
 
 	// initialize variables
@@ -505,8 +613,8 @@ void interrupt_handler(int sig) {
 	(void) sig;
 
 	for (int i = 0; i < MAX_CLIENTS; i++){
-		if (clients[i] != 0)
-			pthread_cancel(clients[i]);
+		if (client_threads[i] != 0)
+			pthread_cancel(client_threads[i]);
 	}
 	pthread_cancel(main_thread);
 }

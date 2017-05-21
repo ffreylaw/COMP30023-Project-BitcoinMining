@@ -24,7 +24,6 @@
 #define TEXT_LEN 40
 #define BUFFER_SIZE 100
 #define MAX_CLIENTS 100
-#define MAX_PENGDING_JOBS 10
 
 pthread_mutex_t lock;
 FILE *fp;
@@ -41,23 +40,15 @@ typedef struct {
 	int thread_idx;
 } client_t;
 
-typedef struct message {
-    client_t *client;
-	pthread_t *work_threads;
-	int *work_count;
-	char *buffer;
-	int thread_idx;
-} message_t;
-
 pthread_t main_thread;
-pthread_t client_threads[MAX_CLIENTS];
+pthread_t clients[MAX_CLIENTS];
 client_t client_args[MAX_CLIENTS];
 int client_count = 0;
 
 void *main_work_function(void*);
 void *client_work_function(void*);
-void *message_work_function(void*);
-char **buffer_reader(char*, int*);
+int handle_message(char*, client_t*);
+char **split(char*, int*);
 bool is_solution(const char*, const char*, const char*);
 BYTE *proof_of_work(const char*, const char*, const char*, const char*);
 void connect_log(client_t*);
