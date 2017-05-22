@@ -1,0 +1,193 @@
+============================================
+vis/glaw.OUT
+03:15:38_Tuesday_23_May_2017
+============================================
+=== COMP30023 Project 2 Feedback ===
+ 
+total 72K
+drwxr-x---. 4 ss ldaemon 4.0K May 23 03:15 .
+drwxr-x---. 4 ss ldaemon 4.0K May 23 03:15 ..
+-rwx------. 1 ss ldaemon  609 May 23 03:15 Makefile
+drwxr-x---. 2 ss ldaemon 4.0K May 23 03:15 invis
+-rwx------. 1 ss ldaemon 4.7K May 23 03:15 list.c
+-rwx------. 1 ss ldaemon 2.2K May 23 03:15 list.h
+-rwx------. 1 ss ldaemon  17K May 23 03:15 server.c
+-rwx------. 1 ss ldaemon 1.8K May 23 03:15 server.h
+-rwx------. 1 ss ldaemon 5.6K May 23 03:15 sha256.c
+-rwx------. 1 ss ldaemon 1.4K May 23 03:15 sha256.h
+-rwx------. 1 ss ldaemon 3.0K May 23 03:15 uint256.h
+drwx------. 2 ss ldaemon 4.0K May 23 03:15 vis
+================ START RUN SCRIPT ================
+Current Working Directory: /home/ss/subrun-4000v-cis-nutmeg-l-18426/comp30023_project2/glaw
+Submitted Files: total 64
+-rwx------. 1 ss ldaemon   609 May 23 03:15 Makefile
+drwxr-x---. 2 ss ldaemon  4096 May 23 03:15 invis
+-rwx------. 1 ss ldaemon  4776 May 23 03:15 list.c
+-rwx------. 1 ss ldaemon  2197 May 23 03:15 list.h
+-rwx------. 1 ss ldaemon 17132 May 23 03:15 server.c
+-rwx------. 1 ss ldaemon  1790 May 23 03:15 server.h
+-rwx------. 1 ss ldaemon  5708 May 23 03:15 sha256.c
+-rwx------. 1 ss ldaemon  1346 May 23 03:15 sha256.h
+-rwx------. 1 ss ldaemon  2988 May 23 03:15 uint256.h
+drwx------. 2 ss ldaemon  4096 May 23 03:15 vis
+gcc -Wall -Wextra -std=c99   -c -o server.o server.c
+server.c: In function 'main':
+server.c:39: warning: implicit declaration of function 'bzero'
+server.c: In function 'proof_of_work':
+server.c:539: warning: format '%llx' expects type 'long long unsigned int', but argument 3 has type 'uint64_t'
+gcc -Wall -Wextra -std=c99   -c -o sha256.o sha256.c
+gcc -Wall -Wextra -std=c99   -c -o list.o list.c
+list.c:161: warning: 'foldr' defined but not used
+gcc -Wall -Wextra -std=c99 -o server server.o sha256.o list.o -lpthread
+.......E.EE..EE...........
+======================================================================
+ERROR: test_multi_work1 (__main__.TestMultiWorkCorrectness)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "../data/test.py", line 29, in wrapper
+    result = func(*args, **kwargs)
+  File "../data/test.py", line 317, in test_multi_work1
+    stuff = parse_soln(ret)
+  File "../data/test.py", line 48, in parse_soln
+    diff = items[1]
+IndexError: list index out of range
+
+======================================================================
+ERROR: test_multi_work3 (__main__.TestMultiWorkCorrectness)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "../data/test.py", line 29, in wrapper
+    result = func(*args, **kwargs)
+  File "../data/test.py", line 333, in test_multi_work3
+    ret = s.recv(1024)
+  File "../data/test.py", line 23, in _handle_timeout
+    raise TimeoutError(error_message)
+TimeoutError: Timer expired
+
+======================================================================
+ERROR: test_multi_work4 (__main__.TestMultiWorkCorrectness)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "../data/test.py", line 29, in wrapper
+    result = func(*args, **kwargs)
+  File "../data/test.py", line 342, in test_multi_work4
+    ret = s.recv(1024)
+  File "../data/test.py", line 23, in _handle_timeout
+    raise TimeoutError(error_message)
+TimeoutError: Timer expired
+
+======================================================================
+ERROR: test_solo_iwork1 (__main__.TestSingleWorkCorrectness)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "../data/test.py", line 29, in wrapper
+    result = func(*args, **kwargs)
+  File "../data/test.py", line 293, in test_solo_iwork1
+    ret = s.recv(1024)
+error: [Errno 104] Connection reset by peer
+
+======================================================================
+ERROR: test_solo_iwork2 (__main__.TestSingleWorkCorrectness)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "../data/test.py", line 29, in wrapper
+    result = func(*args, **kwargs)
+  File "../data/test.py", line 301, in test_solo_iwork2
+    ret = s.recv(1024)
+error: [Errno 104] Connection reset by peer
+
+----------------------------------------------------------------------
+Ran 26 tests in 29.357s
+
+FAILED (errors=5)
+================ END RUN SCRIPT ================
+================ START STDOUT ==================
+ERROR writing to socket: Broken pipe
+ERROR writing to socket: Broken pipe
+ERROR writing to socket: Broken pipe
+ERROR writing to socket: Broken pipe
+ERROR writing to socket: Broken pipe
+ERROR writing to socket: Broken pipe
+ERROR writing to socket: Broken pipe
+ERROR writing to socket: Broken pipe
+ERROR writing to socket: Broken pipe
+ERROR writing to socket: Broken pipe
+ERROR writing to socket: Broken pipe
+ERROR writing to socket: Broken pipe
+ERROR writing to socket: Broken pipe
+ERROR writing to socket: Broken pipe
+ERROR writing to socket: Broken pipe
+ERROR writing to socket: Broken pipe
+ERROR writing to socket: Broken pipe
+ERROR writing to socket: Broken pipe
+ERROR writing to socket: Broken pipe
+ERROR writing to socket: Broken pipe
+ERROR writing to socket: Broken pipe
+ERROR writing to socket: Broken pipe
+================ END STDOUT ====================
+ 
+=== COMP30023 Project 2 Feedback END ===
+============================================
+src/list.h
+03:15:08_Tuesday_23_May_2017
+============================================
+
+This file not shown by user request
+File length 2197 bytes
+
+============================================
+src/sha256.h
+03:15:08_Tuesday_23_May_2017
+============================================
+
+This file not shown by user request
+File length 1346 bytes
+
+============================================
+src/server.h
+03:15:08_Tuesday_23_May_2017
+============================================
+
+This file not shown by user request
+File length 1790 bytes
+
+============================================
+src/sha256.c
+03:15:08_Tuesday_23_May_2017
+============================================
+
+This file not shown by user request
+File length 5708 bytes
+
+============================================
+src/uint256.h
+03:15:08_Tuesday_23_May_2017
+============================================
+
+This file not shown by user request
+File length 2988 bytes
+
+============================================
+src/list.c
+03:15:08_Tuesday_23_May_2017
+============================================
+
+This file not shown by user request
+File length 4776 bytes
+
+============================================
+src/server.c
+03:15:08_Tuesday_23_May_2017
+============================================
+
+This file not shown by user request
+File length 17132 bytes
+
+============================================
+src/Makefile
+03:15:08_Tuesday_23_May_2017
+============================================
+
+This file not shown by user request
+File length 609 bytes
+

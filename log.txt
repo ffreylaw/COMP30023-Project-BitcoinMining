@@ -1,3 +1,14 @@
-[21-05-2017 15:53:29](127.0.0.1)(socket_id 4) client connected
-[21-05-2017 15:53:39](127.0.0.1)(socket_id 4) server receive a message from client: WORK 1fffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212399 01
-[21-05-2017 15:53:39](127.0.0.1)(socket_id 4) server send a message to client: SOLN 1fffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212605
+[23-05-2017 00:59:42](0.0.0.0) client(127.0.0.1)(socket_id 4) connected
+[23-05-2017 00:59:43](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): https://drive.google.com/a/student.unimelb.edu.au/file/d/0B3xYS6Pl0EkrVHM5ZjhLY085ZWs/view?usp=sharing
+[23-05-2017 00:59:43](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): ERRO              unrecognized message
+[23-05-2017 00:59:48](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212399 01
+[23-05-2017 00:59:49](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212399 01
+[23-05-2017 00:59:49](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212399 01
+[23-05-2017 00:59:51](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): ABRT
+[23-05-2017 00:59:51](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): OKAY
+[23-05-2017 00:59:52](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212399 01
+[23-05-2017 00:59:52](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212399 01
+[23-05-2017 01:00:18](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1fffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212399 01
+[23-05-2017 01:00:25](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): PING
+[23-05-2017 01:00:25](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): PONG
+[23-05-2017 01:00:30](0.0.0.0) client(127.0.0.1)(socket_id 4) disconnected

@@ -1,0 +1,20 @@
+[23-05-2017 01:45:17](0.0.0.0) client(127.0.0.1)(socket_id 4) connected
+[23-05-2017 01:45:18](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): PING
+[23-05-2017 01:45:18](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): PONG
+[23-05-2017 01:45:19](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): /Users/jeffrey/GitHub/c/comp30023-ass2/list.c /Users/jeffrey/GitHub/c/comp30023-ass2/list.h /Users/jeffrey/GitHub/c/comp30023-ass2/Makefile 
+[23-05-2017 01:45:19](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): ERRO              unrecognized message
+[23-05-2017 01:45:37](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212399 01
+[23-05-2017 01:45:39](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212399 01
+[23-05-2017 01:45:40](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212399 01
+[23-05-2017 01:45:45](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): PING
+[23-05-2017 01:45:45](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): PONG
+[23-05-2017 01:46:20](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): SOLN 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023f6c072
+[23-05-2017 01:47:03](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): SOLN 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023f6c072
+[23-05-2017 01:47:41](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212399 01
+[23-05-2017 01:47:44](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): PING
+[23-05-2017 01:47:44](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): PONG
+[23-05-2017 01:47:46](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): SOLN 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023f6c072
+[23-05-2017 01:47:55](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): ABRT
+[23-05-2017 01:47:55](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): OKAY
+[23-05-2017 01:48:02](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): PING
+[23-05-2017 01:48:02](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): PONG
