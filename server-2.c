@@ -317,37 +317,50 @@ void *handle_message(void *param) {
 		} else if (!strcmp(command, "ERRO")) {
 			output = "ERRO         should not send to server\r\n";
 		} else if (!strcmp(command, "SOLN")) {
-			if (n < 4) {
-				output = "ERRO               SOLN less arguments\r\n";
-			} else if (is_solution(input[1], input[2], input[3])) {
-				output = "OKAY\r\n";
-				len = 6;
+			if (n != 4) {
+				output = "ERRO            invalid SOLN arguments\r\n";
+			} else if ((strlen(input[1]) != 8) ||
+				       (strlen(input[2]) != 64) ||
+				       (strlen(input[3]) != 16)) {
+				output = "ERRO            invalid SOLN arguments\r\n";
 			} else {
-				output = "ERRO              solution is not okay\r\n";
+				if (is_solution(input[1], input[2], input[3])) {
+					output = "OKAY\r\n";
+					len = 6;
+				} else {
+					output = "ERRO              solution is not okay\r\n";
+				}
 			}
 	    } else if (!strcmp(command, "WORK")) {
-			if (n < 5) {
-				output = "ERRO               WORK less arguments\r\n";
+			if (n != 5) {
+				output = "ERRO            invalid WORK arguments\r\n";
 			} else {
-				int n = list_len(*(message->work_queue));
-				if (n >= MAX_PENGDING_JOBS) {
-					if (write(message->client->client_fd, "Pending job limit exceeded\n", 27) < 0) {
-						perror("ERROR writing to socket");
-						*(message->client->disconnect) = true;
+				if ((strlen(input[1]) != 8) ||
+				    (strlen(input[2]) != 64) ||
+				    (strlen(input[3]) != 16) ||
+				    (strlen(input[4]) != 2)) {
+					output = "ERRO            invalid WORK arguments\r\n";
+				} else {
+					int n = list_len(*(message->work_queue));
+					if (n >= MAX_PENGDING_JOBS) {
+						if (write(message->client->client_fd, "Pending job limit exceeded\n", 27) < 0) {
+							perror("ERROR writing to socket");
+							*(message->client->disconnect) = true;
+						}
+						return NULL;
 					}
+
+					work_t *work = (work_t*)malloc(sizeof(work_t));
+					work->client = message->client;
+					work->difficulty = input[1];
+					work->seed = input[2];
+					work->start = input[3];
+					work->worker_count = input[4];
+
+					insert(work, message->work_queue);
+
 					return NULL;
 				}
-
-				work_t *work = (work_t*)malloc(sizeof(work_t));
-				work->client = message->client;
-				work->difficulty = input[1];
-				work->seed = input[2];
-				work->start = input[3];
-				work->worker_count = input[4];
-
-				insert(work, message->work_queue);
-
-				return NULL;
 			}
 	    } else if (!strcmp(command, "ABRT")) {
 			List *queue = message->work_queue;
