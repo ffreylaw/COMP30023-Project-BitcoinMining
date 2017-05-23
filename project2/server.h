@@ -1,3 +1,14 @@
+/*
+ * COMP30023 Computer Systems
+ * Semester 1 2017
+ *
+ * Project 2 - Bitcoin Mining
+ *
+ * Geoffrey Law (glaw@student.unimelb.edu.au)
+ * Student ID: 759218
+ *
+ */
+
 #ifndef SERVER_H
 #define SERVER_H
 
@@ -27,9 +38,6 @@
 #define MAX_CLIENTS 100
 #define MAX_PENGDING_JOBS 10
 
-pthread_mutex_t lock;
-FILE *fp;
-
 typedef struct{
 	int socket_fd;
     struct sockaddr_in server_addr;
@@ -58,7 +66,12 @@ typedef struct {
 	char *worker_count;
 } work_t;
 
+pthread_mutex_t lock;
+FILE *fp;
+
 pthread_t main_thread;
+bool server_termination_flag = false;
+
 pthread_t client_threads[MAX_CLIENTS];
 client_t client_args[MAX_CLIENTS];
 int client_count = 0;
@@ -66,19 +79,17 @@ int client_count = 0;
 pthread_t work_thread;
 List work_queue;
 
-bool server_termination_flag = false;
-
 void *main_work_function(void*);
 void *client_work_function(void*);
+void *message_work_function(void*);
 void *handle_work(void*);
-void *handle_message(void*);
-char **split(char*, int*);
 bool is_solution(const char*, const char*, const char*);
 BYTE *proof_of_work(const char*, const char*, const char*, const char*, client_t*);
 void connect_log(client_t*);
 void disconnect_log(client_t*);
 void receive_message_log(client_t*, char*);
 void send_message_log(client_t*, char*);
+char **split(char*, int*);
 void interrupt_handler(int);
 
 #endif

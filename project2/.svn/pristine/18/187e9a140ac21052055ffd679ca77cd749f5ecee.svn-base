@@ -1,14 +1,3 @@
-/*
- * COMP30023 Computer Systems
- * Semester 1 2017
- *
- * Project 2 - Bitcoin Mining
- *
- * Geoffrey Law (glaw@student.unimelb.edu.au)
- * Student ID: 759218
- *
- */
-
 #include "server.h"
 
 /** Main function
@@ -87,7 +76,7 @@ int main(int argc, char* argv[]) {
 	return 0;
 }
 
-/** Work function for a server thread
+/** Main work function for client thread
  */
 void *main_work_function(void *param) {
 	server_t *server = (server_t*)param;
@@ -161,12 +150,20 @@ void *main_work_function(void *param) {
     return NULL;
 }
 
-/** Work function for a client thread
+/** Work function for handling a message
  */
 void *client_work_function(void *param) {
 	client_t *client = (client_t*)param;
 
 	while (true) {
+		// List node = work_queue;
+		// while (node != NULL) {
+		// 	work_t *data = (work_t*)node->data;
+		// 	fprintf(stderr, "%d, WORK %s %s %s %s\n", data->client->client_fd, data->difficulty, data->seed, data->start, data->worker_count);
+		// 	node = node->next;
+		// }
+		// fprintf(stderr, "-------------------------------------\n");
+
 		/* Check disconnection */
 		if (*(client->disconnect)) {
 			disconnect_log(client);
@@ -204,7 +201,7 @@ void *client_work_function(void *param) {
 		memcpy(message->buffer, buffer, 256);
 
 		/* Create a message thread to handle the input message */
-	    if (pthread_create(&message_thread, NULL, message_work_function, (void*)message)) {
+	    if (pthread_create(&message_thread, NULL, handle_message, (void*)message)) {
 	        perror("ERROR to create message thread");
 	        exit(EXIT_FAILURE);
 	    }
@@ -212,6 +209,8 @@ void *client_work_function(void *param) {
 	        perror("ERROR to join thread");
 	        exit(EXIT_FAILURE);
 	    }
+
+		// handle_message(message);
 
 	}
 
@@ -249,131 +248,10 @@ void *client_work_function(void *param) {
 	client_count--;
 	pthread_mutex_unlock(&lock);
 
+	/* Client thread exit */
 	pthread_exit(NULL);
 
 	return NULL;
-}
-
-/** Work function for a message thread
- */
-void *message_work_function(void *param) {
-	message_t *message = (message_t*)param;
-
-	int n = 0;
-	char **input = split(message->buffer, &n);
-    char *output = NULL;
-	int len = TEXT_LEN;
-
-	if (!input) {
-		/* Invalid message */
-		output = "ERRO                     invalid input\r\n";
-	} else {
-		/* Switch all cases */
-		char *command = input[0];
-	    if (!strcmp(command, "PING")) {
-	        output = "PONG\r\n";
-			len = 6;
-	    } else if (!strcmp(command, "PONG")) {
-			output = "ERRO          reserved server response\r\n";
-		} else if (!strcmp(command, "OKAY")) {
-			output = "ERRO   not okay to send OKAY to server\r\n";
-		} else if (!strcmp(command, "ERRO")) {
-			output = "ERRO         should not send to server\r\n";
-		} else if (!strcmp(command, "SOLN")) {
-			if (n != 4) {
-				output = "ERRO            invalid SOLN arguments\r\n";
-			} else if ((strlen(input[1]) != 8) ||
-				       (strlen(input[2]) != 64) ||
-				       (strlen(input[3]) != 16)) {
-				output = "ERRO            invalid SOLN arguments\r\n";
-			} else {
-				if (is_solution(input[1], input[2], input[3])) {
-					output = "OKAY\r\n";
-					len = 6;
-				} else {
-					output = "ERRO              solution is not okay\r\n";
-				}
-			}
-	    } else if (!strcmp(command, "WORK")) {
-			if (n != 5) {
-				output = "ERRO            invalid WORK arguments\r\n";
-			} else if ((strlen(input[1]) != 8) ||
-				    (strlen(input[2]) != 64) ||
-				    (strlen(input[3]) != 16) ||
-				    (strlen(input[4]) != 2)) {
-				output = "ERRO            invalid WORK arguments\r\n";
-			} else {
-				if (list_len(work_queue) >= MAX_PENGDING_JOBS) {
-					if (write(message->client->client_fd, "ERRO        pending job limit exceeded\r\n", 40) < 0) {
-						perror("ERROR writing to socket");
-						*(message->client->disconnect) = true;
-					}
-					pthread_exit(NULL);
-					return NULL;
-				}
-
-				pthread_mutex_lock(&lock);
-
-				work_t *work = (work_t*)malloc(sizeof(work_t));
-				work->client = message->client;
-				work->difficulty = input[1];
-				work->seed = input[2];
-				work->start = input[3];
-				work->worker_count = input[4];
-
-				insert(work, &work_queue);
-
-				pthread_mutex_unlock(&lock);
-
-				pthread_exit(NULL);
-				return NULL;
-			}
-	    } else if (!strcmp(command, "ABRT")) {
-
-			pthread_mutex_lock(&lock);
-
-			List node = work_queue;
-			List prev = NULL;
-			while (node != NULL) {
-				work_t *data = (work_t*)node->data;
-				if (data->client->client_fd == message->client->client_fd) {
-					if (prev == NULL) {
-						work_queue = node->next;
-					} else if (node->next == NULL) {
-						prev->next = NULL;
-					} else {
-						prev->next = node->next;
-					}
-					List ptr = node;
-			        node = node->next;
-			        free(ptr);
-				} else {
-					prev = node;
-			        node = node->next;
-				}
-			}
-
-			*(message->client->abrt) = true;
-
-			pthread_mutex_unlock(&lock);
-
-			output = "OKAY\r\n";
-			len = 6;
-		} else {
-	        output = "ERRO              unrecognized message\r\n";
-	    }
-	}
-
-	/* Write output */
-	if (write(message->client->client_fd, output, len) < 0) {
-		perror("ERROR writing to socket");
-		*(message->client->disconnect) = true;
-	} else {
-		send_message_log(message->client, output);
-	}
-
-	pthread_exit(NULL);
-    return NULL;
 }
 
 /** Handle work queue
@@ -438,7 +316,158 @@ void *handle_work(void *param) {
 		}
 	}
 
+	/* Work thread exit */
 	pthread_exit(NULL);
+}
+
+/** Handle input message
+ */
+void *handle_message(void *param) {
+	message_t *message = (message_t*)param;
+
+	int n = 0;
+	char **input = split(message->buffer, &n);
+    char *output = NULL;
+	int len = TEXT_LEN;
+
+	if (!input) {
+		/* Invalid message */
+		output = "ERRO                     invalid input\r\n";
+	} else {
+		/* Switch all cases */
+		char *command = input[0];
+	    if (!strcmp(command, "PING")) {
+	        output = "PONG\r\n";
+			len = 6;
+	    } else if (!strcmp(command, "PONG")) {
+			output = "ERRO          reserved server response\r\n";
+		} else if (!strcmp(command, "OKAY")) {
+			output = "ERRO   not okay to send OKAY to server\r\n";
+		} else if (!strcmp(command, "ERRO")) {
+			output = "ERRO         should not send to server\r\n";
+		} else if (!strcmp(command, "SOLN")) {
+			if (n != 4) {
+				output = "ERRO            invalid SOLN arguments\r\n";
+			} else if ((strlen(input[1]) != 8) ||
+				       (strlen(input[2]) != 64) ||
+				       (strlen(input[3]) != 16)) {
+				output = "ERRO            invalid SOLN arguments\r\n";
+			} else {
+				if (is_solution(input[1], input[2], input[3])) {
+					output = "OKAY\r\n";
+					len = 6;
+				} else {
+					output = "ERRO              solution is not okay\r\n";
+				}
+			}
+	    } else if (!strcmp(command, "WORK")) {
+			if (n != 5) {
+				output = "ERRO            invalid WORK arguments\r\n";
+			} else if ((strlen(input[1]) != 8) ||
+				    (strlen(input[2]) != 64) ||
+				    (strlen(input[3]) != 16) ||
+				    (strlen(input[4]) != 2)) {
+				output = "ERRO            invalid WORK arguments\r\n";
+			} else {
+				if (list_len(work_queue) >= MAX_PENGDING_JOBS) {
+					if (write(message->client->client_fd, "ERRO        pending job limit exceeded\r\n", 40) < 0) {
+						perror("ERROR writing to socket");
+						*(message->client->disconnect) = true;
+					}
+					// pthread_exit(NULL);
+					return NULL;
+				}
+
+				pthread_mutex_lock(&lock);
+
+				work_t *work = (work_t*)malloc(sizeof(work_t));
+				work->client = message->client;
+				work->difficulty = input[1];
+				work->seed = input[2];
+				work->start = input[3];
+				work->worker_count = input[4];
+
+				insert(work, &work_queue);
+
+				pthread_mutex_unlock(&lock);
+
+				// pthread_exit(NULL);
+				return NULL;
+			}
+	    } else if (!strcmp(command, "ABRT")) {
+
+			pthread_mutex_lock(&lock);
+
+			List node = work_queue;
+			List prev = NULL;
+			while (node != NULL) {
+				work_t *data = (work_t*)node->data;
+				if (data->client->client_fd == message->client->client_fd) {
+					if (prev == NULL) {
+						work_queue = node->next;
+					} else if (node->next == NULL) {
+						prev->next = NULL;
+					} else {
+						prev->next = node->next;
+					}
+					List ptr = node;
+			        node = node->next;
+			        free(ptr);
+				} else {
+					prev = node;
+			        node = node->next;
+				}
+			}
+
+			*(message->client->abrt) = true;
+
+			pthread_mutex_unlock(&lock);
+
+			output = "OKAY\r\n";
+			len = 6;
+		} else {
+	        output = "ERRO              unrecognized message\r\n";
+	    }
+	}
+
+	/* Write output */
+	if (write(message->client->client_fd, output, len) < 0) {
+		perror("ERROR writing to socket");
+		*(message->client->disconnect) = true;
+	} else {
+		send_message_log(message->client, output);
+	}
+
+	// pthread_exit(NULL);
+    return NULL;
+}
+
+/** Split string by space \r \n
+ */
+char **split(char *buffer, int *s) {
+	char **array = (char**)malloc(((*s)+1) * sizeof(char*));
+	int n = 0;
+	array[(*s)] = (char*)malloc((n+1) * sizeof(char));
+	for (int i = 0; i < 256; i++) {
+		if (buffer[i] == '\0' || buffer[i] == '\r' || buffer[i] == '\n') {
+			array[(*s)] = (char*)realloc(array[(*s)], (n+1) * sizeof(char));
+			array[(*s)][n] = '\0';
+			(*s)++;
+			break;
+		} else if (buffer[i] == ' ' && (i > 0)) {
+			array[(*s)] = (char*)realloc(array[(*s)], (n+1) * sizeof(char));
+			array[(*s)][n] = '\0';
+			(*s)++;
+			array = (char**)realloc(array, ((*s)+1) * sizeof(char*));
+			n = 0;
+			array[(*s)] = (char*)malloc((n+1) * sizeof(char));
+		} else {
+			array[(*s)] = (char*)realloc(array[(*s)], (n+1) * sizeof(char));
+			array[(*s)][n] = buffer[i];
+			n += 1;
+		}
+	}
+    return array;
 }
 
 /** Handle SOLN message; return true if is a solution
@@ -698,34 +727,6 @@ void send_message_log(client_t *client, char *message) {
 	fclose(fp);
 
 	pthread_mutex_unlock(&lock);
-}
-
-/** Split string by space \r \n
- */
-char **split(char *buffer, int *s) {
-	char **array = (char**)malloc(((*s)+1) * sizeof(char*));
-	int n = 0;
-	array[(*s)] = (char*)malloc((n+1) * sizeof(char));
-	for (int i = 0; i < 256; i++) {
-		if (buffer[i] == '\0' || buffer[i] == '\r' || buffer[i] == '\n') {
-			array[(*s)] = (char*)realloc(array[(*s)], (n+1) * sizeof(char));
-			array[(*s)][n] = '\0';
-			(*s)++;
-			break;
-		} else if (buffer[i] == ' ' && (i > 0)) {
-			array[(*s)] = (char*)realloc(array[(*s)], (n+1) * sizeof(char));
-			array[(*s)][n] = '\0';
-			(*s)++;
-			array = (char**)realloc(array, ((*s)+1) * sizeof(char*));
-			n = 0;
-			array[(*s)] = (char*)malloc((n+1) * sizeof(char));
-		} else {
-			array[(*s)] = (char*)realloc(array[(*s)], (n+1) * sizeof(char));
-			array[(*s)][n] = buffer[i];
-			n += 1;
-		}
-	}
-    return array;
 }
 
 /** Interrupt signal handler

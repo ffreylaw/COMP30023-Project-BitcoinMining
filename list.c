@@ -22,7 +22,7 @@
 static void *foldl(void *(*f)(void *acc, void *data), void *acc, List list);
 
 /* An abstraction of recursively traversing a list from left to right */
-static void *foldr(void *(*f)(void *data, void *res), void *res, List list);
+// static void *foldr(void *(*f)(void *data, void *res), void *res, List list);
 
 /* Add one to accumulator */
 static void *plus_one(void *acc, void *data);
@@ -158,11 +158,11 @@ static void *plus_one(void *acc, void *data) {
 }
 
 /* An abstraction of recursively traversing a list from right to left */
-static void *foldr(void *(*f)(void *data, void *res), void *res, List list) {
-    return !list
-        ? res
-        : f(list->data, foldr(f, res, list->next));
-}
+// static void *foldr(void *(*f)(void *data, void *res), void *res, List list) {
+//     return !list
+//         ? res
+//         : f(list->data, foldr(f, res, list->next));
+// }
 
 /* An abstraction of recursively traversing a list from left to right */
 static void *foldl(void *(*f)(void *acc, void *data), void *acc, List list) {

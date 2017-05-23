@@ -1,2 +1,4 @@
-[24-05-2017 00:16:06](0.0.0.0) client(127.0.0.1)(socket_id 4) connected
-[24-05-2017 00:16:09](0.0.0.0) client(127.0.0.1)(socket_id 4) disconnected
+[24-05-2017 01:32:09](0.0.0.0) client(127.0.0.1)(socket_id 4) connected
+[24-05-2017 01:32:09](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
+[24-05-2017 01:32:27](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): SOLN 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023f6c072
+[24-05-2017 01:32:50](0.0.0.0) client(127.0.0.1)(socket_id 4) disconnected

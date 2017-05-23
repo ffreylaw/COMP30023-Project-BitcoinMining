@@ -28,6 +28,6 @@ clobber: clean
 
 ## Dependencies
 
-server.o:			server.h sha256.h uint256.h list.h
+server.o:			server.h uint256.h sha256.h list.h
 sha256.o:			sha256.h
 list.o:				list.h
