@@ -14,7 +14,6 @@
 #include <time.h>
 #include <arpa/inet.h>
 #include <signal.h>
-#include <semaphore.h>
 
 #include "uint256.h"
 #include "sha256.h"
@@ -29,7 +28,6 @@
 #define MAX_PENGDING_JOBS 10
 
 pthread_mutex_t lock;
-sem_t mutex;
 FILE *fp;
 
 typedef struct{
@@ -42,7 +40,6 @@ typedef struct {
 	struct sockaddr_in server_addr;
     struct sockaddr_in client_addr;
 	int thread_idx;
-	pthread_t work_thread;
 	bool *disconnect;
 	bool *abrt;
 } client_t;
@@ -61,15 +58,15 @@ typedef struct {
 	char *worker_count;
 } work_t;
 
-typedef struct {
-    client_t *client;
-	List *work_queue;
-} work_arg_t;
-
 pthread_t main_thread;
 pthread_t client_threads[MAX_CLIENTS];
 client_t client_args[MAX_CLIENTS];
 int client_count = 0;
+
+pthread_t work_thread;
+List work_queue;
+
+bool server_termination_flag = false;
 
 void *main_work_function(void*);
 void *client_work_function(void*);

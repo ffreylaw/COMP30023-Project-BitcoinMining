@@ -156,13 +156,13 @@ void *client_work_function(void *param) {
 	client_t *client = (client_t*)param;
 
 	while (true) {
-		List node = work_queue;
-		while (node != NULL) {
-			work_t *data = (work_t*)node->data;
-			fprintf(stderr, "%d, WORK %s %s %s %s\n", data->client->client_fd, data->difficulty, data->seed, data->start, data->worker_count);
-			node = node->next;
-		}
-		fprintf(stderr, "\n");
+		// List node = work_queue;
+		// while (node != NULL) {
+		// 	work_t *data = (work_t*)node->data;
+		// 	fprintf(stderr, "%d, WORK %s %s %s %s\n", data->client->client_fd, data->difficulty, data->seed, data->start, data->worker_count);
+		// 	node = node->next;
+		// }
+		// fprintf(stderr, "-------------------------------------\n");
 
 		/* Check disconnection */
 		if (*(client->disconnect)) {
@@ -192,7 +192,7 @@ void *client_work_function(void *param) {
 
 		receive_message_log(client, buffer);
 
-		// pthread_t message_thread;
+		pthread_t message_thread;
 
 		/* Create a message struct */
 		message_t *message = (message_t*)malloc(sizeof(message_t));
@@ -201,16 +201,16 @@ void *client_work_function(void *param) {
 		memcpy(message->buffer, buffer, 256);
 
 		/* Create a message thread to handle the input message */
-	    // if (pthread_create(&message_thread, NULL, handle_message, (void*)message)) {
-	    //     perror("ERROR to create message thread");
-	    //     exit(EXIT_FAILURE);
-	    // }
-		// if (pthread_join(message_thread, NULL)) {
-	    //     perror("ERROR to join thread");
-	    //     exit(EXIT_FAILURE);
-	    // }
+	    if (pthread_create(&message_thread, NULL, handle_message, (void*)message)) {
+	        perror("ERROR to create message thread");
+	        exit(EXIT_FAILURE);
+	    }
+		if (pthread_join(message_thread, NULL)) {
+	        perror("ERROR to join thread");
+	        exit(EXIT_FAILURE);
+	    }
 
-		handle_message(message);
+		// handle_message(message);
 
 	}
 
@@ -264,6 +264,7 @@ void *handle_work(void *param) {
 		if (server_termination_flag) {
 			break;
 		}
+
 		/* Get first element of the linked list */
 		List node = work_queue;
 		if (node != NULL) {
@@ -289,9 +290,14 @@ void *handle_work(void *param) {
 			/* Generate output */
 			char *out = (char*)malloc((95 + 2) * sizeof(char));
 			char *soln = (char*)malloc((16 + 1) * sizeof(char));
+			char *temp = (char*)malloc(2 * sizeof(char));
+			int idx = 0;
 			for (int i = 0; i < 8; i++) {
-				sprintf(soln+(2*i), "%02x", solution[i]);
+				sprintf(temp, "%02x", solution[i]);
+				soln[idx++] = temp[0];
+				soln[idx++] = temp[1];
 			}
+			soln[idx] = '\0';
 			sprintf(out, "SOLN %s %s %s\r\n", data->difficulty, data->seed, soln);
 
 			char *output = out;
@@ -502,15 +508,17 @@ bool is_solution(const char *difficulty_, const char *seed_, const char *solutio
 	/* Generate text */
     BYTE text[TEXT_LEN];
 	int idx = 0;
-	char buf[2];
+	char *buf = (char*)malloc((2 + 1) * sizeof(char));
 	for (i = 0; i < 64; i+=2) {
 		buf[0] = seed_[i];
 		buf[1] = seed_[i+1];
+		buf[2] = '\0';
 		text[idx++] = strtoull(buf, NULL, 16);
 	}
 	for (i = 0; i < 16; i+=2) {
         buf[0] = solution_[i];
         buf[1] = solution_[i+1];
+		buf[2] = '\0';
         text[idx++] = strtoull(buf, NULL, 16);
     }
 
@@ -542,10 +550,11 @@ BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *star
 	uint32_t difficulty = strtoull(difficulty_, NULL, 16);
 	BYTE seed[32];
 	uint256_init(seed);
-	char buf[2];
+	char *buf = (char*)malloc((2 + 1) * sizeof(char));
 	for (i = 0; i < 64; i+=2) {
 		buf[0] = seed_[i];
 		buf[1] = seed_[i+1];
+		buf[2] = '\0';
 		seed[i/2] = strtoull(buf, NULL, 16);
 	}
 	uint64_t start = strtoull(start_, NULL, 16);
@@ -592,11 +601,12 @@ BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *star
 		/* Concatenate with nonce */
 		idx = 32;
 		BYTE *nonce = (BYTE*)malloc(8 * sizeof(BYTE));
-		char *soln_buf = (char*)malloc((16 + 1) * sizeof(char));
+		char *soln_buf = (char*)malloc(16 * sizeof(char));
 		sprintf(soln_buf, "%llx", start);
 		for (i = 0; i < 16; i+=2) {
 			buf[0] = soln_buf[i];
 			buf[1] = soln_buf[i+1];
+			buf[2] = '\0';
 			nonce[i/2] = strtoull(buf, NULL, 16);
 		}
 		for (i = 0; i < 8; i++) { text[idx++] = nonce[i]; }
@@ -723,6 +733,7 @@ void send_message_log(client_t *client, char *message) {
  */
 void interrupt_handler(int sig) {
 	(void) sig;
+
 	for (int i = 0; i < MAX_CLIENTS; i++){
 		if (client_threads[i] != 0) {
 			*(client_args[i].disconnect) = true;
@@ -730,6 +741,7 @@ void interrupt_handler(int sig) {
 			pthread_cancel(client_threads[i]);
 		}
 	}
+	server_termination_flag = true;
 	pthread_cancel(work_thread);
 	pthread_cancel(main_thread);
 	exit(EXIT_FAILURE);

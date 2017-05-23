@@ -1,16 +1,2 @@
-[23-05-2017 19:59:32](0.0.0.0) client(127.0.0.1)(socket_id 4) connected
-[23-05-2017 19:59:35](0.0.0.0) client(127.0.0.1)(socket_id 5) connected
-[23-05-2017 19:59:40](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 5): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212399 01
-[23-05-2017 19:59:41](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 5): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212399 01
-[23-05-2017 19:59:41](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 5): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212399 01
-[23-05-2017 19:59:43](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212399 01
-[23-05-2017 19:59:43](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212399 01
-[23-05-2017 19:59:44](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212399 01
-[23-05-2017 19:59:46](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 5): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212399 01
-[23-05-2017 19:59:47](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 5): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212399 01
-[23-05-2017 19:59:52](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 5): ABRT
-[23-05-2017 19:59:52](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 5): OKAY
-[23-05-2017 19:59:57](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): ABRT
-[23-05-2017 19:59:57](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): OKAY
-[23-05-2017 20:00:03](0.0.0.0) client(127.0.0.1)(socket_id 5) disconnected
-[23-05-2017 20:00:05](0.0.0.0) client(127.0.0.1)(socket_id 4) disconnected
+[24-05-2017 00:16:06](0.0.0.0) client(127.0.0.1)(socket_id 4) connected
+[24-05-2017 00:16:09](0.0.0.0) client(127.0.0.1)(socket_id 4) disconnected

@@ -83,6 +83,12 @@ void *main_work_function(void *param) {
 	int socket_fd = server->socket_fd;
 	struct sockaddr_in server_addr = server->server_addr;
 
+	/* Create a work thread to handle work queue */
+	if (pthread_create(&work_thread, NULL, handle_work, NULL)) {
+		perror("ERROR to create work thread");
+		exit(EXIT_FAILURE);
+	}
+
     /* Read characters from the connection,
     	then process */
 	while (true) {
@@ -99,7 +105,7 @@ void *main_work_function(void *param) {
 
 		/* Check whether reach the limit */
 		if (client_count >= MAX_CLIENTS) {
-			if (write(client_fd, "Client limit exceeded\n", 22) < 0) {
+			if (write(client_fd, "ERRO             client limit exceeded\r\n", 40) < 0) {
 				perror("ERROR writing to socket");
 				exit(EXIT_FAILURE);
 			}
@@ -122,10 +128,10 @@ void *main_work_function(void *param) {
 		client->server_addr = server_addr;
 		client->client_addr = client_addr;
 		client->thread_idx = idx;
-		bool disconnect = false;
-		client->disconnect = &disconnect;
-		bool abrt = false;
-		client->abrt = &abrt;
+		client->disconnect = (bool*)malloc(sizeof(bool));
+		*(client->disconnect) = false;
+		client->abrt = (bool*)malloc(sizeof(bool));
+		*(client->abrt) = false;
 
 		client_args[idx] = *client;
 
@@ -149,20 +155,15 @@ void *main_work_function(void *param) {
 void *client_work_function(void *param) {
 	client_t *client = (client_t*)param;
 
-	/* Create a work queue */
-	List work_queue = NULL;
-
-	work_arg_t *work_arg = (work_arg_t*)malloc(sizeof(work_arg_t));
-	work_arg->client = client;
-	work_arg->work_queue = &work_queue;
-
-	/* Create a work thread to handle work queue */
-	if (pthread_create(&(client->work_thread), NULL, handle_work, (void*)work_arg)) {
-		perror("ERROR to create work thread");
-		exit(EXIT_FAILURE);
-	}
-
 	while (true) {
+		// List node = work_queue;
+		// while (node != NULL) {
+		// 	work_t *data = (work_t*)node->data;
+		// 	fprintf(stderr, "%d, WORK %s %s %s %s\n", data->client->client_fd, data->difficulty, data->seed, data->start, data->worker_count);
+		// 	node = node->next;
+		// }
+		// fprintf(stderr, "-------------------------------------\n");
+
 		/* Check disconnection */
 		if (*(client->disconnect)) {
 			disconnect_log(client);
@@ -191,30 +192,55 @@ void *client_work_function(void *param) {
 
 		receive_message_log(client, buffer);
 
+		pthread_t message_thread;
+
 		/* Create a message struct */
 		message_t *message = (message_t*)malloc(sizeof(message_t));
 		message->client = client;
-		message->work_queue = &work_queue;
 		message->buffer = (char*)malloc(256 * sizeof(char));
 		memcpy(message->buffer, buffer, 256);
 
-		/* Handle the input message */
-		handle_message(message);
+		/* Create a message thread to handle the input message */
+	    if (pthread_create(&message_thread, NULL, handle_message, (void*)message)) {
+	        perror("ERROR to create message thread");
+	        exit(EXIT_FAILURE);
+	    }
+		if (pthread_join(message_thread, NULL)) {
+	        perror("ERROR to join thread");
+	        exit(EXIT_FAILURE);
+	    }
+
+		// handle_message(message);
+
 	}
 
 	/* Close client socket */
 	close(client->client_fd);
 
+	pthread_mutex_lock(&lock);
 	/* Clean work queue */
 	*(client->disconnect) = true;
 	List node = work_queue;
+	List prev = NULL;
 	while (node != NULL) {
-		List ptr = node;
-		node = node->next;
-		free(ptr);
+		work_t *data = (work_t*)node->data;
+		if (data->client->client_fd == client->client_fd) {
+			if (prev == NULL) {
+				work_queue = node->next;
+			} else if (node->next == NULL) {
+				prev->next = NULL;
+			} else {
+				prev->next = node->next;
+			}
+			List ptr = node;
+			node = node->next;
+			free(ptr);
+		} else {
+			prev = node;
+			node = node->next;
+		}
 	}
-	work_queue = NULL;
-	pthread_cancel(client->work_thread);
+	pthread_mutex_unlock(&lock);
 
 	/* Delete from array */
 	pthread_mutex_lock(&lock);
@@ -231,44 +257,47 @@ void *client_work_function(void *param) {
 /** Handle work queue
  */
 void *handle_work(void *param) {
-	work_arg_t *work_arg = (work_arg_t*)param;
+	(void) param;
 
 	while (true) {
-		/* Check disconnection */
-		if (*(work_arg->client->disconnect)) {
+		/* Check server termination */
+		if (server_termination_flag) {
 			break;
 		}
 
 		/* Get first element of the linked list */
-		List *queue = (List*)work_arg->work_queue;
-		List node = *queue;
+		List node = work_queue;
 		if (node != NULL) {
 			work_t *data = node->data;
+
+			/* Check client disconnection */
+			if (*(data->client->disconnect)) {
+				continue;
+			}
 
 			/* To get a solution */
 			BYTE *solution = proof_of_work(data->difficulty,
 										   data->seed,
 										   data->start,
 									   	   data->worker_count,
-									   	   work_arg->client);
+									   	   data->client);
 
-			/* Check ABRT */
-			if (*(work_arg->client->abrt)) {
-   				*(work_arg->client->abrt) = false;
-   				continue;
-   			}
-
-			/* Check disconnection */
-			if (!solution || node == NULL) {
-				break;
+			/* Check disconnection and abrt */
+			if (!solution) {
+				continue;
 			}
 
 			/* Generate output */
 			char *out = (char*)malloc((95 + 2) * sizeof(char));
 			char *soln = (char*)malloc((16 + 1) * sizeof(char));
+			char *temp = (char*)malloc(2 * sizeof(char));
+			int idx = 0;
 			for (int i = 0; i < 8; i++) {
-				sprintf(soln+(2*i), "%02x", solution[i]);
+				sprintf(temp, "%02x", solution[i]);
+				soln[idx++] = temp[0];
+				soln[idx++] = temp[1];
 			}
+			soln[idx] = '\0';
 			sprintf(out, "SOLN %s %s %s\r\n", data->difficulty, data->seed, soln);
 
 			char *output = out;
@@ -277,13 +306,13 @@ void *handle_work(void *param) {
 			/* Write output */
 			if (write(data->client->client_fd, output, len) < 0) {
 				perror("ERROR writing to socket");
-				*(work_arg->client->disconnect) = true;
-				break;
+				*(data->client->disconnect) = true;
+			} else {
+				send_message_log(data->client, output);
 			}
-			send_message_log(data->client, output);
 
 			/* Pop out the first element of the linked list */
-			pop(queue);
+			pop(&work_queue);
 		}
 	}
 
@@ -334,45 +363,65 @@ void *handle_message(void *param) {
 	    } else if (!strcmp(command, "WORK")) {
 			if (n != 5) {
 				output = "ERRO            invalid WORK arguments\r\n";
-			} else {
-				if ((strlen(input[1]) != 8) ||
+			} else if ((strlen(input[1]) != 8) ||
 				    (strlen(input[2]) != 64) ||
 				    (strlen(input[3]) != 16) ||
 				    (strlen(input[4]) != 2)) {
-					output = "ERRO            invalid WORK arguments\r\n";
-				} else {
-					int n = list_len(*(message->work_queue));
-					if (n >= MAX_PENGDING_JOBS) {
-						if (write(message->client->client_fd, "Pending job limit exceeded\n", 27) < 0) {
-							perror("ERROR writing to socket");
-							*(message->client->disconnect) = true;
-						}
-						return NULL;
+				output = "ERRO            invalid WORK arguments\r\n";
+			} else {
+				if (list_len(work_queue) >= MAX_PENGDING_JOBS) {
+					if (write(message->client->client_fd, "ERRO        pending job limit exceeded\r\n", 40) < 0) {
+						perror("ERROR writing to socket");
+						*(message->client->disconnect) = true;
 					}
-
-					work_t *work = (work_t*)malloc(sizeof(work_t));
-					work->client = message->client;
-					work->difficulty = input[1];
-					work->seed = input[2];
-					work->start = input[3];
-					work->worker_count = input[4];
-
-					insert(work, message->work_queue);
-
+					// pthread_exit(NULL);
 					return NULL;
 				}
+
+				pthread_mutex_lock(&lock);
+
+				work_t *work = (work_t*)malloc(sizeof(work_t));
+				work->client = message->client;
+				work->difficulty = input[1];
+				work->seed = input[2];
+				work->start = input[3];
+				work->worker_count = input[4];
+
+				insert(work, &work_queue);
+
+				pthread_mutex_unlock(&lock);
+
+				// pthread_exit(NULL);
+				return NULL;
 			}
 	    } else if (!strcmp(command, "ABRT")) {
-			List *queue = message->work_queue;
-			List node = (*queue);
+
+			pthread_mutex_lock(&lock);
+
+			List node = work_queue;
+			List prev = NULL;
 			while (node != NULL) {
-		        List ptr = node;
-		        node = node->next;
-		        free(ptr);
+				work_t *data = (work_t*)node->data;
+				if (data->client->client_fd == message->client->client_fd) {
+					if (prev == NULL) {
+						work_queue = node->next;
+					} else if (node->next == NULL) {
+						prev->next = NULL;
+					} else {
+						prev->next = node->next;
+					}
+					List ptr = node;
+			        node = node->next;
+			        free(ptr);
+				} else {
+					prev = node;
+			        node = node->next;
+				}
 			}
-			(*queue) = NULL;
 
 			*(message->client->abrt) = true;
+
+			pthread_mutex_unlock(&lock);
 
 			output = "OKAY\r\n";
 			len = 6;
@@ -389,6 +438,7 @@ void *handle_message(void *param) {
 		send_message_log(message->client, output);
 	}
 
+	// pthread_exit(NULL);
     return NULL;
 }
 
@@ -458,15 +508,17 @@ bool is_solution(const char *difficulty_, const char *seed_, const char *solutio
 	/* Generate text */
     BYTE text[TEXT_LEN];
 	int idx = 0;
-	char buf[2];
+	char *buf = (char*)malloc((2 + 1) * sizeof(char));
 	for (i = 0; i < 64; i+=2) {
 		buf[0] = seed_[i];
 		buf[1] = seed_[i+1];
+		buf[2] = '\0';
 		text[idx++] = strtoull(buf, NULL, 16);
 	}
 	for (i = 0; i < 16; i+=2) {
         buf[0] = solution_[i];
         buf[1] = solution_[i+1];
+		buf[2] = '\0';
         text[idx++] = strtoull(buf, NULL, 16);
     }
 
@@ -498,10 +550,11 @@ BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *star
 	uint32_t difficulty = strtoull(difficulty_, NULL, 16);
 	BYTE seed[32];
 	uint256_init(seed);
-	char buf[2];
+	char *buf = (char*)malloc((2 + 1) * sizeof(char));
 	for (i = 0; i < 64; i+=2) {
 		buf[0] = seed_[i];
 		buf[1] = seed_[i+1];
+		buf[2] = '\0';
 		seed[i/2] = strtoull(buf, NULL, 16);
 	}
 	uint64_t start = strtoull(start_, NULL, 16);
@@ -548,11 +601,12 @@ BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *star
 		/* Concatenate with nonce */
 		idx = 32;
 		BYTE *nonce = (BYTE*)malloc(8 * sizeof(BYTE));
-		char *soln_buf = (char*)malloc((16 + 1) * sizeof(char));
+		char *soln_buf = (char*)malloc(16 * sizeof(char));
 		sprintf(soln_buf, "%llx", start);
 		for (i = 0; i < 16; i+=2) {
 			buf[0] = soln_buf[i];
 			buf[1] = soln_buf[i+1];
+			buf[2] = '\0';
 			nonce[i/2] = strtoull(buf, NULL, 16);
 		}
 		for (i = 0; i < 8; i++) { text[idx++] = nonce[i]; }
@@ -679,13 +733,16 @@ void send_message_log(client_t *client, char *message) {
  */
 void interrupt_handler(int sig) {
 	(void) sig;
+
 	for (int i = 0; i < MAX_CLIENTS; i++){
 		if (client_threads[i] != 0) {
 			*(client_args[i].disconnect) = true;
-			pthread_cancel(client_args[i].work_thread);
+			pthread_cancel(work_thread);
 			pthread_cancel(client_threads[i]);
 		}
 	}
+	server_termination_flag = true;
+	pthread_cancel(work_thread);
 	pthread_cancel(main_thread);
 	exit(EXIT_FAILURE);
 }
