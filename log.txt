@@ -1,60 +1,50 @@
-[24-05-2017 16:45:15](0.0.0.0) client(127.0.0.1)(socket_id 4) connected
-[24-05-2017 16:45:17](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1d29ffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f c40000000ce40000 01
-[24-05-2017 16:45:17](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): SOLN 1d29ffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f c40000000ce4b271
-[24-05-2017 16:45:18](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1d29ffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f c40000000ce40000 01
-[24-05-2017 16:45:18](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): SOLN 1d29ffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f c40000000ce4b271
-[24-05-2017 16:45:18](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1d29ffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f c40000000ce40000 01
-[24-05-2017 16:45:18](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): SOLN 1d29ffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f c40000000ce4b271
-[24-05-2017 16:45:19](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1d29ffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f c40000000ce40000 01
-[24-05-2017 16:45:19](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): SOLN 1d29ffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f c40000000ce4b271
-[24-05-2017 16:45:20](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1d29ffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f c40000000ce40000 01
-[24-05-2017 16:45:20](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): SOLN 1d29ffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f c40000000ce4b271
-[24-05-2017 16:45:20](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1d29ffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f c40000000ce40000 01
-[24-05-2017 16:45:21](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): SOLN 1d29ffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f c40000000ce4b271
-[24-05-2017 16:45:21](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1d29ffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f c40000000ce40000 01
-[24-05-2017 16:45:21](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): SOLN 1d29ffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f c40000000ce4b271
-[24-05-2017 16:45:21](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1d29ffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f c40000000ce40000 01
-[24-05-2017 16:45:21](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): SOLN 1d29ffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f c40000000ce4b271
-[24-05-2017 16:45:22](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1d29ffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f c40000000ce40000 01
-[24-05-2017 16:45:22](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): SOLN 1d29ffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f c40000000ce4b271
-[24-05-2017 16:45:22](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1d29ffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f c40000000ce40000 01
-[24-05-2017 16:45:22](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): SOLN 1d29ffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f c40000000ce4b271
-[24-05-2017 16:45:22](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1d29ffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f c40000000ce40000 01
-[24-05-2017 16:45:23](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): SOLN 1d29ffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f c40000000ce4b271
-[24-05-2017 16:45:35](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
-[24-05-2017 16:45:35](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
-[24-05-2017 16:45:36](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
-[24-05-2017 16:45:36](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
-[24-05-2017 16:45:37](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
-[24-05-2017 16:45:42](0.0.0.0) client(127.0.0.1)(socket_id 5) connected
-[24-05-2017 16:45:42](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 5): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
-[24-05-2017 16:45:43](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 5): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
-[24-05-2017 16:45:43](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 5): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
-[24-05-2017 16:45:44](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 5): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
-[24-05-2017 16:45:44](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 5): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
-[24-05-2017 16:45:46](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
-[24-05-2017 16:45:46](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
-[24-05-2017 16:45:53](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): SOLN 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023f6c072
-[24-05-2017 16:45:59](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): ABRT
-[24-05-2017 16:45:59](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): OKAY
-[24-05-2017 16:46:01](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
-[24-05-2017 16:46:02](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
-[24-05-2017 16:46:04](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): ABRT
-[24-05-2017 16:46:04](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): OKAY
-[24-05-2017 16:46:06](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
-[24-05-2017 16:46:06](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
-[24-05-2017 16:46:07](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
-[24-05-2017 16:46:17](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 5): SOLN 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023f6c072
-[24-05-2017 16:46:34](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 5): SOLN 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023f6c072
-[24-05-2017 16:46:51](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 5): SOLN 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023f6c072
-[24-05-2017 16:47:07](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 5): ABRT
-[24-05-2017 16:47:07](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 5): OKAY
-[24-05-2017 16:47:10](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 5): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
-[24-05-2017 16:47:10](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 5): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
-[24-05-2017 16:47:13](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 5): ABRT
-[24-05-2017 16:47:13](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 5): OKAY
-[24-05-2017 16:47:15](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 5): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
-[24-05-2017 16:47:24](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): SOLN 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023f6c072
-[24-05-2017 16:47:42](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): SOLN 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023f6c072
-[24-05-2017 16:47:59](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): SOLN 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023f6c072
-[24-05-2017 16:48:17](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 5): SOLN 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023f6c072
+[24-05-2017 23:03:49](0.0.0.0) client(127.0.0.1)(socket_id 4) connected
+[24-05-2017 23:03:51](0.0.0.0) client(127.0.0.1)(socket_id 5) connected
+[24-05-2017 23:03:56](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
+[24-05-2017 23:03:57](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
+[24-05-2017 23:03:58](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
+[24-05-2017 23:04:01](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 5): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
+[24-05-2017 23:04:02](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 5): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
+[24-05-2017 23:04:03](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 5): ABRT
+[24-05-2017 23:04:03](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 5): OKAY
+[24-05-2017 23:04:04](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 5): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
+[24-05-2017 23:04:05](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 5): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
+[24-05-2017 23:04:06](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 5): ABRT
+[24-05-2017 23:04:06](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 5): OKAY
+[24-05-2017 23:04:09](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 5): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
+[24-05-2017 23:04:12](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): SOLN 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023f6c072
+[24-05-2017 23:04:26](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): ABRT
+[24-05-2017 23:04:26](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): OKAY
+[24-05-2017 23:04:32](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
+[24-05-2017 23:04:39](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): ABRT
+[24-05-2017 23:04:39](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): OKAY
+[24-05-2017 23:04:40](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
+[24-05-2017 23:04:44](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 5): SOLN 1dffffff  1000000023f6c072
+[24-05-2017 23:05:00](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): SOLN 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023f6c072
+[24-05-2017 23:05:11](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 5): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
+[24-05-2017 23:05:29](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 5): SOLN 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023f6c072
+[24-05-2017 23:05:33](0.0.0.0) client(127.0.0.1)(socket_id 5) disconnected
+[24-05-2017 23:05:34](0.0.0.0) client(127.0.0.1)(socket_id 4) disconnected
+[24-05-2017 23:05:36](0.0.0.0) client(127.0.0.1)(socket_id 4) connected
+[24-05-2017 23:05:38](0.0.0.0) client(127.0.0.1)(socket_id 5) connected
+[24-05-2017 23:05:40](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
+[24-05-2017 23:05:41](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
+[24-05-2017 23:05:42](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
+[24-05-2017 23:05:45](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 5): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
+[24-05-2017 23:05:45](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 5): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
+[24-05-2017 23:05:47](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 5): ABRT
+[24-05-2017 23:05:47](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 5): OKAY
+[24-05-2017 23:05:48](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 5): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
+[24-05-2017 23:05:48](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 5): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
+[24-05-2017 23:05:49](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 5): ABRT
+[24-05-2017 23:05:49](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 5): OKAY
+[24-05-2017 23:05:52](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 5): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
+[24-05-2017 23:05:57](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): SOLN 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023f6c072
+[24-05-2017 23:06:00](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): ABRT
+[24-05-2017 23:06:00](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): OKAY
+[24-05-2017 23:06:02](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
+[24-05-2017 23:06:05](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): ABRT
+[24-05-2017 23:06:05](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): OKAY
+[24-05-2017 23:06:06](0.0.0.0) server receives a message from client(127.0.0.1)(socket_id 4): WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023a12399 01
+[24-05-2017 23:06:17](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 5): SOLN 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023f6c072
+[24-05-2017 23:06:34](0.0.0.0) server sends a message to client(127.0.0.1)(socket_id 4): SOLN 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023f6c072

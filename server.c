@@ -412,7 +412,7 @@ void *handle_work(void *param) {
 				continue;
 			}
 
-			/* Check disconnection */
+			/* Check disconnection during proof_of_work */
 			if (!solution) {
 				continue;
 			}
@@ -569,6 +569,9 @@ BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *star
 	BYTE text[TEXT_LEN];
 	int idx = 0;
 	for (i = 0; i < 32; i++) { text[idx++] = seed[i]; }
+
+	/* Initialize ABRT flag */
+	*(client->abrt) = false;
 
 	/* Find solution */
 	while (true) {
