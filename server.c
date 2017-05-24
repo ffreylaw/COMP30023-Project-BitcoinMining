@@ -193,6 +193,8 @@ void *client_work_function(void *param) {
 			continue;
 		}
 
+		fprintf(stderr, "id: %d, send: %s\n", client->client_fd, buffer);
+
 		receive_message_log(client, buffer);
 
 		pthread_t message_thread;
@@ -399,12 +401,16 @@ void *handle_work(void *param) {
 				continue;
 			}
 
-			/* To get a solution */
-			BYTE *solution = proof_of_work(data->difficulty,
-										   data->seed,
-										   data->start,
-									   	   data->worker_count,
-									   	   data->client);
+			pthread_t worker_thread;
+
+			if (pthread_create(&worker_thread, NULL, handle_worker_bonus, (void*)data)) {
+		        perror("ERROR to create message thread");
+		        exit(EXIT_FAILURE);
+		    }
+			if (pthread_join(worker_thread, NULL)) {
+		        perror("ERROR to join thread");
+		        exit(EXIT_FAILURE);
+		    }
 
 			/* Check ABRT */
 			if (*(data->client->abrt)) {
@@ -413,37 +419,45 @@ void *handle_work(void *param) {
 			}
 
 			/* Check disconnection during proof_of_work */
-			if (!solution) {
+			if (*(data->client->disconnect)) {
 				continue;
-			}
-
-			/* Generate output */
-			char *out = (char*)malloc((95 + 2) * sizeof(char));
-			char *soln = (char*)malloc((16 + 1) * sizeof(char));
-			char *temp = (char*)malloc(2 * sizeof(char));
-			int idx = 0;
-			for (int i = 0; i < 8; i++) {
-				sprintf(temp, "%02x", solution[i]);
-				soln[idx++] = temp[0];
-				soln[idx++] = temp[1];
-			}
-			soln[idx] = '\0';
-			sprintf(out, "SOLN %s %s %s\r\n", data->difficulty, data->seed, soln);
-
-			char *output = out;
-			int len = 95 + 2;
-
-			/* Write output */
-			if (write(data->client->client_fd, output, len) < 0) {
-				perror("ERROR writing to socket");
-				*(data->client->disconnect) = true;
-			} else {
-				send_message_log(data->client, output);
 			}
 
 			/* Pop out the first element of the linked list */
 			pop(&work_queue);
 		}
+	}
+
+	pthread_exit(NULL);
+}
+
+void *handle_worker_bonus(void *param) {
+	work_t *data = (work_t*)param;
+
+	int worker_count = atoi(data->worker_count);
+
+	is_worker_done = false;
+
+	worker_t **worker = (worker_t**)malloc(worker_count * sizeof(worker_t*));
+	for (int i = 0; i <= worker_count; i++) {
+		if (i == worker_count) {
+			break;
+		}
+		worker[i] = (worker_t*)malloc(sizeof(worker_t));
+ 		worker[i]->work = data;
+		worker[i]->index = i;
+		if (pthread_create(&(worker[i]->thread), NULL, proof_of_work, (void*)worker[i])) {
+			perror("ERROR to create message thread");
+			exit(EXIT_FAILURE);
+		}
+	}
+
+	while (!is_worker_done) {
+		continue;
+	}
+
+	for (int i = 0; i < worker_count; i++) {
+		pthread_cancel(worker[i]->thread);
 	}
 
 	pthread_exit(NULL);
@@ -521,9 +535,16 @@ bool is_solution(const char *difficulty_, const char *seed_, const char *solutio
 
 /** Handle WORK message; return a solution
  */
-BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *start_, const char *worker_count_, client_t *client) {
-	(void) worker_count_;
+void *proof_of_work(void *param) {
 	int i = 0;
+
+	worker_t *worker = (worker_t*)param;
+	client_t *client = worker->work->client;
+	char *difficulty_ = worker->work->difficulty;
+	char *seed_ = worker->work->seed;
+	char *start_ = worker->work->start;
+	char *worker_count_ = worker->work->worker_count;
+	int worker_count = atoi(worker_count_);
 
 	/* Initialize variables */
 	uint32_t difficulty = strtoull(difficulty_, NULL, 16);
@@ -536,7 +557,7 @@ BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *star
 		buf[2] = '\0';
 		seed[i/2] = strtoull(buf, NULL, 16);
 	}
-	uint64_t start = strtoull(start_, NULL, 16);
+	uint64_t start = (strtoull(start_, NULL, 16)) + worker->index;
 	uint32_t alpha = (MASK_ALPHA & difficulty) >> 24;
 	uint32_t beta = MASK_BETA & difficulty;
 
@@ -570,20 +591,22 @@ BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *star
 	int idx = 0;
 	for (i = 0; i < 32; i++) { text[idx++] = seed[i]; }
 
+	BYTE *nonce = (BYTE*)malloc(8 * sizeof(BYTE));
+	char *soln_buf = (char*)malloc(16 * sizeof(char));
+
 	/* Initialize ABRT flag */
 	*(client->abrt) = false;
 
 	/* Find solution */
 	while (true) {
 		// check disconnection or ABRT
-		if (*(client->disconnect) || *(client->abrt)){
+		if (*(client->disconnect) || *(client->abrt) || is_worker_done){
+			is_worker_done = true;
 			break;
 		}
 
 		/* Concatenate with nonce */
 		idx = 32;
-		BYTE *nonce = (BYTE*)malloc(8 * sizeof(BYTE));
-		char *soln_buf = (char*)malloc(16 * sizeof(char));
 		sprintf(soln_buf, "%llx", start);
 		for (i = 0; i < 16; i+=2) {
 			buf[0] = soln_buf[i];
@@ -605,13 +628,43 @@ BYTE *proof_of_work(const char *difficulty_, const char *seed_, const char *star
 
 		/* Compare result with target  */
 		if (sha256_compare(result, target) < 0) {
-			return nonce;
+			/* Generate output */
+			char *out = (char*)malloc((95 + 2) * sizeof(char));
+			char *soln = (char*)malloc((16 + 1) * sizeof(char));
+			char *temp = (char*)malloc(2 * sizeof(char));
+			int index = 0;
+			for (int i = 0; i < 8; i++) {
+				sprintf(temp, "%02x", nonce[i]);
+				soln[index++] = temp[0];
+				soln[index++] = temp[1];
+			}
+			soln[index] = '\0';
+			sprintf(out, "SOLN %s %s %s\r\n", difficulty_, seed_, soln);
+
+			char *output = out;
+			int len = 95 + 2;
+
+			fprintf(stderr, "id: %d, output: %s\n", client->client_fd, output);
+
+			/* Write output */
+			if (write(client->client_fd, output, len) < 0) {
+				perror("ERROR writing to socket");
+				*(client->disconnect) = true;
+			} else {
+				send_message_log(client, output);
+			}
+
+			is_worker_done = true;
+
+			pthread_exit(NULL);
+			return NULL;
 		} else {
-			start++;
+			start += worker_count;
 			continue;
 		}
 	}
 
+	pthread_exit(NULL);
 	return NULL;
 }
 

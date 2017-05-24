@@ -66,6 +66,13 @@ typedef struct {
 	char *worker_count;
 } work_t;
 
+typedef struct {
+	pthread_t thread;
+	work_t *work;
+	int index;
+	bool *is_done;
+} worker_t;
+
 pthread_mutex_t lock;
 FILE *fp;
 
@@ -79,12 +86,15 @@ int client_count = 0;
 pthread_t work_thread;
 List work_queue;
 
+bool is_worker_done = false;
+
 void *main_work_function(void*);
 void *client_work_function(void*);
 void *message_work_function(void*);
 void *handle_work(void*);
+void *handle_worker_bonus(void*);
 bool is_solution(const char*, const char*, const char*);
-BYTE *proof_of_work(const char*, const char*, const char*, const char*, client_t*);
+void *proof_of_work(void*);
 void connect_log(client_t*);
 void disconnect_log(client_t*);
 void receive_message_log(client_t*, char*);
