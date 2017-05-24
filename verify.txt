@@ -1,40 +1,40 @@
 ============================================
 vis/glaw.OUT
-01:42:57_Wednesday_24_May_2017
+16:42:26_Wednesday_24_May_2017
 ============================================
 === COMP30023 Project 2 Feedback ===
  
 total 72K
-drwxr-x---. 4 ss ldaemon 4.0K May 24 01:42 .
-drwxr-x---. 4 ss ldaemon 4.0K May 24 01:42 ..
--rwx------. 1 ss ldaemon  609 May 24 01:42 Makefile
-drwxr-x---. 2 ss ldaemon 4.0K May 24 01:42 invis
--rwx------. 1 ss ldaemon 4.7K May 24 01:42 list.c
--rwx------. 1 ss ldaemon 2.2K May 24 01:42 list.h
--rwx------. 1 ss ldaemon  19K May 24 01:42 server.c
--rwx------. 1 ss ldaemon 1.9K May 24 01:42 server.h
--rwx------. 1 ss ldaemon 5.6K May 24 01:42 sha256.c
--rwx------. 1 ss ldaemon 1.4K May 24 01:42 sha256.h
--rwx------. 1 ss ldaemon 3.0K May 24 01:42 uint256.h
-drwx------. 2 ss ldaemon 4.0K May 24 01:42 vis
+drwxr-x---. 4 ss ldaemon 4.0K May 24 16:41 .
+drwxr-x---. 4 ss ldaemon 4.0K May 24 16:41 ..
+-rwx------. 1 ss ldaemon  609 May 24 16:41 Makefile
+drwxr-x---. 2 ss ldaemon 4.0K May 24 16:41 invis
+-rwx------. 1 ss ldaemon 4.7K May 24 16:41 list.c
+-rwx------. 1 ss ldaemon 2.2K May 24 16:41 list.h
+-rwx------. 1 ss ldaemon  19K May 24 16:41 server.c
+-rwx------. 1 ss ldaemon 1.9K May 24 16:41 server.h
+-rwx------. 1 ss ldaemon 5.6K May 24 16:41 sha256.c
+-rwx------. 1 ss ldaemon 1.4K May 24 16:41 sha256.h
+-rwx------. 1 ss ldaemon 3.0K May 24 16:41 uint256.h
+drwx------. 2 ss ldaemon 4.0K May 24 16:41 vis
 ================ START RUN SCRIPT ================
 Current Working Directory: /home/ss/subrun-4000v-cis-nutmeg-l-18426/comp30023_project2/glaw
 Submitted Files: total 64
--rwx------. 1 ss ldaemon   609 May 24 01:42 Makefile
-drwxr-x---. 2 ss ldaemon  4096 May 24 01:42 invis
--rwx------. 1 ss ldaemon  4794 May 24 01:42 list.c
--rwx------. 1 ss ldaemon  2197 May 24 01:42 list.h
--rwx------. 1 ss ldaemon 18842 May 24 01:42 server.c
--rwx------. 1 ss ldaemon  1908 May 24 01:42 server.h
--rwx------. 1 ss ldaemon  5708 May 24 01:42 sha256.c
--rwx------. 1 ss ldaemon  1346 May 24 01:42 sha256.h
--rwx------. 1 ss ldaemon  2988 May 24 01:42 uint256.h
-drwx------. 2 ss ldaemon  4096 May 24 01:42 vis
+-rwx------. 1 ss ldaemon   609 May 24 16:41 Makefile
+drwxr-x---. 2 ss ldaemon  4096 May 24 16:41 invis
+-rwx------. 1 ss ldaemon  4794 May 24 16:41 list.c
+-rwx------. 1 ss ldaemon  2197 May 24 16:41 list.h
+-rwx------. 1 ss ldaemon 18968 May 24 16:41 server.c
+-rwx------. 1 ss ldaemon  1908 May 24 16:41 server.h
+-rwx------. 1 ss ldaemon  5708 May 24 16:41 sha256.c
+-rwx------. 1 ss ldaemon  1346 May 24 16:41 sha256.h
+-rwx------. 1 ss ldaemon  2988 May 24 16:41 uint256.h
+drwx------. 2 ss ldaemon  4096 May 24 16:41 vis
 gcc -Wall -Wextra -std=c99   -c -o server.o server.c
 server.c: In function 'main':
 server.c:50: warning: implicit declaration of function 'bzero'
 server.c: In function 'proof_of_work':
-server.c:576: warning: format '%llx' expects type 'long long unsigned int', but argument 3 has type 'uint64_t'
+server.c:584: warning: format '%llx' expects type 'long long unsigned int', but argument 3 has type 'uint64_t'
 gcc -Wall -Wextra -std=c99   -c -o sha256.o sha256.c
 gcc -Wall -Wextra -std=c99   -c -o list.o list.c
 gcc -Wall -Wextra -std=c99 -o server server.o sha256.o list.o -lpthread
@@ -64,7 +64,7 @@ Traceback (most recent call last):
 TimeoutError: Timer expired
 
 ----------------------------------------------------------------------
-Ran 26 tests in 27.032s
+Ran 26 tests in 26.800s
 
 FAILED (errors=2)
 ================ END RUN SCRIPT ================
@@ -204,48 +204,16 @@ ERROR writing to socket: Broken pipe
  
 === COMP30023 Project 2 Feedback END ===
 ============================================
-src/server.h
-01:42:29_Wednesday_24_May_2017
-============================================
-
-This file not shown by user request
-File length 1908 bytes
-
-============================================
-src/list.c
-01:42:29_Wednesday_24_May_2017
-============================================
-
-This file not shown by user request
-File length 4794 bytes
-
-============================================
-src/sha256.h
-01:42:29_Wednesday_24_May_2017
-============================================
-
-This file not shown by user request
-File length 1346 bytes
-
-============================================
-src/uint256.h
-01:42:29_Wednesday_24_May_2017
-============================================
-
-This file not shown by user request
-File length 2988 bytes
-
-============================================
 src/server.c
-01:42:29_Wednesday_24_May_2017
+16:41:59_Wednesday_24_May_2017
 ============================================
 
 This file not shown by user request
-File length 18842 bytes
+File length 18968 bytes
 
 ============================================
 src/Makefile
-01:42:30_Wednesday_24_May_2017
+16:41:59_Wednesday_24_May_2017
 ============================================
 
 This file not shown by user request
@@ -253,17 +221,49 @@ File length 609 bytes
 
 ============================================
 src/sha256.c
-01:42:29_Wednesday_24_May_2017
+16:41:59_Wednesday_24_May_2017
 ============================================
 
 This file not shown by user request
 File length 5708 bytes
 
 ============================================
+src/list.c
+16:41:59_Wednesday_24_May_2017
+============================================
+
+This file not shown by user request
+File length 4794 bytes
+
+============================================
+src/server.h
+16:41:59_Wednesday_24_May_2017
+============================================
+
+This file not shown by user request
+File length 1908 bytes
+
+============================================
+src/uint256.h
+16:41:59_Wednesday_24_May_2017
+============================================
+
+This file not shown by user request
+File length 2988 bytes
+
+============================================
 src/list.h
-01:42:29_Wednesday_24_May_2017
+16:41:59_Wednesday_24_May_2017
 ============================================
 
 This file not shown by user request
 File length 2197 bytes
+
+============================================
+src/sha256.h
+16:41:59_Wednesday_24_May_2017
+============================================
+
+This file not shown by user request
+File length 1346 bytes
 

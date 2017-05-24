@@ -338,8 +338,10 @@ void *message_work_function(void *param) {
 				work_t *data = (work_t*)node->data;
 				if (data->client->client_fd == message->client->client_fd) {
 					if (prev == NULL) {
+						// head
 						work_queue = node->next;
 					} else if (node->next == NULL) {
+						// tail
 						prev->next = NULL;
 					} else {
 						prev->next = node->next;
@@ -404,7 +406,13 @@ void *handle_work(void *param) {
 									   	   data->worker_count,
 									   	   data->client);
 
-			/* Check disconnection and abrt */
+			/* Check ABRT */
+			if (*(data->client->abrt)) {
+				*(data->client->abrt) = false;
+				continue;
+			}
+
+			/* Check disconnection */
 			if (!solution) {
 				continue;
 			}
