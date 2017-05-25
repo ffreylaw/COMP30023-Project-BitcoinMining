@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
 	server_addr.sin_port = htons(port_no);  // store in machine-neutral format
 
 	/* Bind address to the socket */
-	if (bind(socket_fd, (struct sockaddr *) &server_addr, sizeof(server_addr)) < 0) {
+	while (bind(socket_fd, (struct sockaddr *) &server_addr, sizeof(server_addr)) < 0) {
 		perror("ERROR on binding");
 		exit(EXIT_FAILURE);
 	}
@@ -211,11 +211,11 @@ void *client_work_function(void *param) {
 			continue;
 		}
 
-		// if (!strcmp(buffer, "PING\r\n") || !strcmp(buffer, "PONG\r\n")) {
-		//
-		// } else {
-		// 	fprintf(stderr, "id: %d, send: %s\n", client->client_fd, buffer);
-		// }
+		if (!strcmp(buffer, "PING\r\n") || !strcmp(buffer, "PONG\r\n")) {
+
+		} else {
+			fprintf(stderr, "id: %d, send: %s\n", client->client_fd, buffer);
+		}
 
 		bool flag1 = false;
 		bool flag2 = false;
@@ -243,11 +243,11 @@ void *client_work_function(void *param) {
 				break;
 			}
 
-			// if (!strcmp(temp, "PING\r\n") || !strcmp(temp, "PONG\r\n")) {
-			//
-			// } else {
-			// 	fprintf(stderr, "temp: %s\n", temp);
-			// }
+			if (!strcmp(temp, "PING\r\n") || !strcmp(temp, "PONG\r\n")) {
+
+			} else {
+				fprintf(stderr, "temp: %s\n", temp);
+			}
 
 			receive_message_log(client, temp);
 
@@ -264,10 +264,10 @@ void *client_work_function(void *param) {
 		        perror("ERROR to create message thread");
 		        exit(EXIT_FAILURE);
 		    }
-			if (pthread_join(message_thread, NULL)) {
-		        perror("ERROR to join thread");
-		        exit(EXIT_FAILURE);
-		    }
+			// if (pthread_join(message_thread, NULL)) {
+		    //     perror("ERROR to join thread");
+		    //     exit(EXIT_FAILURE);
+		    // }
 
 			bzero(temp, 256);
 			idx = 0;
