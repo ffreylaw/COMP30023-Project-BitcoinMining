@@ -277,26 +277,6 @@ void *client_work_function(void *param) {
 			}
 		}
 
-		// receive_message_log(client, buffer);
-		//
-		// pthread_t message_thread;
-		//
-		// /* Create a message struct */
-		// message_t *message = (message_t*)malloc(sizeof(message_t));
-		// message->client = client;
-		// message->buffer = (char*)malloc(256 * sizeof(char));
-		// memcpy(message->buffer, buffer, 256);
-		//
-		// /* Create a message thread to handle the input message */
-	    // if (pthread_create(&message_thread, NULL, message_work_function, (void*)message)) {
-	    //     perror("ERROR to create message thread");
-	    //     exit(EXIT_FAILURE);
-	    // }
-		// if (pthread_join(message_thread, NULL)) {
-	    //     perror("ERROR to join thread");
-	    //     exit(EXIT_FAILURE);
-	    // }
-
 	}
 
 	/* Close client socket */
@@ -354,14 +334,14 @@ void *message_work_function(void *param) {
 	} else {
 		/* Switch all cases */
 		char *command = input[0];
-	    if (!strcmp(command, "PING")) {
+	    if (!strcmp(command, "PING") && (n == 1)) {
 	        output = "PONG\r\n";
 			len = 6;
-	    } else if (!strcmp(command, "PONG")) {
+	    } else if (!strcmp(command, "PONG") && (n == 1)) {
 			output = "ERRO          reserved server response\r\n";
-		} else if (!strcmp(command, "OKAY")) {
+		} else if (!strcmp(command, "OKAY") && (n == 1)) {
 			output = "ERRO   not okay to send OKAY to server\r\n";
-		} else if (!strcmp(command, "ERRO")) {
+		} else if (!strcmp(command, "ERRO") && (n == 1)) {
 			output = "ERRO         should not send to server\r\n";
 		} else if (!strcmp(command, "SOLN")) {
 			if (n != 4) {
@@ -412,7 +392,7 @@ void *message_work_function(void *param) {
 				pthread_exit(NULL);
 				return NULL;
 			}
-	    } else if (!strcmp(command, "ABRT")) {
+	    } else if (!strcmp(command, "ABRT") && (n == 1)) {
 
 			pthread_mutex_lock(&lock);
 
