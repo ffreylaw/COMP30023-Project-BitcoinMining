@@ -92,7 +92,6 @@ void *main_work_function(void*);
 void *client_work_function(void*);
 void *message_work_function(void*);
 void *handle_work(void*);
-void *handle_worker_bonus(void*);
 bool is_solution(const char*, const char*, const char*);
 void *proof_of_work(void*);
 void connect_log(client_t*);

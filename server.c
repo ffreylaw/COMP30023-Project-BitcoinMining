@@ -166,7 +166,25 @@ void *main_work_function(void *param) {
 void *client_work_function(void *param) {
 	client_t *client = (client_t*)param;
 
+	char temp[256];
+	bzero(temp, 256);
+	int idx = 0;
+
 	while (true) {
+
+		// List node = work_queue;
+		// if (work_queue) {
+		// 	fprintf(stderr, "-----------------------\n");
+		// }
+		// while (node != NULL) {
+		// 	work_t *data = (work_t*)node->data;
+		// 	fprintf(stderr, "%d, WORK %s %s %s %s\n", data->client->client_fd, data->difficulty, data->seed, data->start, data->worker_count);
+		// 	node = node->next;
+		// }
+		// if (work_queue) {
+		// 	fprintf(stderr, "-----------------------\n");
+		// }
+
 		/* Check disconnection */
 		if (*(client->disconnect)) {
 			disconnect_log(client);
@@ -193,27 +211,91 @@ void *client_work_function(void *param) {
 			continue;
 		}
 
-		fprintf(stderr, "id: %d, send: %s\n", client->client_fd, buffer);
+		// if (!strcmp(buffer, "PING\r\n") || !strcmp(buffer, "PONG\r\n")) {
+		//
+		// } else {
+		// 	fprintf(stderr, "id: %d, send: %s\n", client->client_fd, buffer);
+		// }
 
-		receive_message_log(client, buffer);
+		bool flag1 = false;
+		bool flag2 = false;
+		int i = 0;
 
-		pthread_t message_thread;
+		while (true) {
+			while (i < 256) {
+				if ((buffer[i] != '\0') &&
+					(buffer[i] != '\n')) {
+					temp[idx++] = buffer[i];
+				} else if (buffer[i] == '\n') {
+					temp[idx++] = buffer[i];
+					i++;
+					if ((i <= 256) && (buffer[i] == '\0')) {
+						flag2 = true;
+					}
+					break;
+				} else if (buffer[i] == '\0') {
+					flag1 = true;
+					break;
+				}
+				i++;
+			}
+			if (flag1) {
+				break;
+			}
 
-		/* Create a message struct */
-		message_t *message = (message_t*)malloc(sizeof(message_t));
-		message->client = client;
-		message->buffer = (char*)malloc(256 * sizeof(char));
-		memcpy(message->buffer, buffer, 256);
+			// if (!strcmp(temp, "PING\r\n") || !strcmp(temp, "PONG\r\n")) {
+			//
+			// } else {
+			// 	fprintf(stderr, "temp: %s\n", temp);
+			// }
 
-		/* Create a message thread to handle the input message */
-	    if (pthread_create(&message_thread, NULL, message_work_function, (void*)message)) {
-	        perror("ERROR to create message thread");
-	        exit(EXIT_FAILURE);
-	    }
-		if (pthread_join(message_thread, NULL)) {
-	        perror("ERROR to join thread");
-	        exit(EXIT_FAILURE);
-	    }
+			receive_message_log(client, temp);
+
+			pthread_t message_thread;
+
+			/* Create a message struct */
+			message_t *message = (message_t*)malloc(sizeof(message_t));
+			message->client = client;
+			message->buffer = (char*)malloc(256 * sizeof(char));
+			memcpy(message->buffer, temp, 256);
+
+			/* Create a message thread to handle the input message */
+		    if (pthread_create(&message_thread, NULL, message_work_function, (void*)message)) {
+		        perror("ERROR to create message thread");
+		        exit(EXIT_FAILURE);
+		    }
+			if (pthread_join(message_thread, NULL)) {
+		        perror("ERROR to join thread");
+		        exit(EXIT_FAILURE);
+		    }
+
+			bzero(temp, 256);
+			idx = 0;
+
+			if (flag2) {
+				break;
+			}
+		}
+
+		// receive_message_log(client, buffer);
+		//
+		// pthread_t message_thread;
+		//
+		// /* Create a message struct */
+		// message_t *message = (message_t*)malloc(sizeof(message_t));
+		// message->client = client;
+		// message->buffer = (char*)malloc(256 * sizeof(char));
+		// memcpy(message->buffer, buffer, 256);
+		//
+		// /* Create a message thread to handle the input message */
+	    // if (pthread_create(&message_thread, NULL, message_work_function, (void*)message)) {
+	    //     perror("ERROR to create message thread");
+	    //     exit(EXIT_FAILURE);
+	    // }
+		// if (pthread_join(message_thread, NULL)) {
+	    //     perror("ERROR to join thread");
+	    //     exit(EXIT_FAILURE);
+	    // }
 
 	}
 
@@ -401,16 +483,31 @@ void *handle_work(void *param) {
 				continue;
 			}
 
-			pthread_t worker_thread;
+			int worker_count = atoi(data->worker_count);
 
-			if (pthread_create(&worker_thread, NULL, handle_worker_bonus, (void*)data)) {
-		        perror("ERROR to create message thread");
-		        exit(EXIT_FAILURE);
-		    }
-			if (pthread_join(worker_thread, NULL)) {
-		        perror("ERROR to join thread");
-		        exit(EXIT_FAILURE);
-		    }
+			is_worker_done = false;
+
+			worker_t **worker = (worker_t**)malloc(worker_count * sizeof(worker_t*));
+			for (int i = 0; i <= worker_count; i++) {
+				if (i == worker_count) {
+					break;
+				}
+				worker[i] = (worker_t*)malloc(sizeof(worker_t));
+		 		worker[i]->work = data;
+				worker[i]->index = i;
+				if (pthread_create(&(worker[i]->thread), NULL, proof_of_work, (void*)worker[i])) {
+					perror("ERROR to create message thread");
+					exit(EXIT_FAILURE);
+				}
+			}
+
+			while (!is_worker_done) {
+				continue;
+			}
+
+			for (int i = 0; i < worker_count; i++) {
+				pthread_cancel(worker[i]->thread);
+			}
 
 			/* Check ABRT */
 			if (*(data->client->abrt)) {
@@ -426,38 +523,6 @@ void *handle_work(void *param) {
 			/* Pop out the first element of the linked list */
 			pop(&work_queue);
 		}
-	}
-
-	pthread_exit(NULL);
-}
-
-void *handle_worker_bonus(void *param) {
-	work_t *data = (work_t*)param;
-
-	int worker_count = atoi(data->worker_count);
-
-	is_worker_done = false;
-
-	worker_t **worker = (worker_t**)malloc(worker_count * sizeof(worker_t*));
-	for (int i = 0; i <= worker_count; i++) {
-		if (i == worker_count) {
-			break;
-		}
-		worker[i] = (worker_t*)malloc(sizeof(worker_t));
- 		worker[i]->work = data;
-		worker[i]->index = i;
-		if (pthread_create(&(worker[i]->thread), NULL, proof_of_work, (void*)worker[i])) {
-			perror("ERROR to create message thread");
-			exit(EXIT_FAILURE);
-		}
-	}
-
-	while (!is_worker_done) {
-		continue;
-	}
-
-	for (int i = 0; i < worker_count; i++) {
-		pthread_cancel(worker[i]->thread);
 	}
 
 	pthread_exit(NULL);
@@ -644,7 +709,7 @@ void *proof_of_work(void *param) {
 			char *output = out;
 			int len = 95 + 2;
 
-			fprintf(stderr, "id: %d, output: %s\n", client->client_fd, output);
+			// fprintf(stderr, "id: %d, output: %s\n", client->client_fd, output);
 
 			/* Write output */
 			if (write(client->client_fd, output, len) < 0) {

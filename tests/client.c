@@ -106,7 +106,7 @@ int main(int argc, char**argv)
 
 	//strcpy(buffer, "WORK 1d29ffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 1000000023212399 04\r\n");
 
-	strcpy(buffer, "WORK 1effffff 0000000019d6689c085ae165831e934ff763ae46a");
+	strcpy(buffer, "WORK 1dffffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 0000000000000000 04\r\nWORK 1d29ffff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f a000000000000000 04\r\nWORK 1ffff");
 
     printf("%s\n", buffer);
 
@@ -135,7 +135,7 @@ int main(int argc, char**argv)
 
 	bzero(buffer,256);
 
-	strcpy(buffer, "218a6c172b3f1b60a8ce26f 0000000000000000 03\r\n");
+	strcpy(buffer, "fff 0000000019d6689c085ae165831e934ff763ae46a218a6c172b3f1b60a8ce26f 0000000000000000 06\r\n");
 
     printf("%s\n", buffer);
 
@@ -162,6 +162,16 @@ int main(int argc, char**argv)
 
 	bzero(buffer,256);
 	n = read(sockfd,buffer,255);
+	printf("%s\n",buffer);
+
+	n = read(sockfd,buffer,255);
+	printf("%s\n",buffer);
+
+	n = read(sockfd,buffer,255);
+	printf("%s\n",buffer);
+
+	n = read(sockfd,buffer,255);
+	printf("%s\n",buffer);
 
 	return 0;
 }
